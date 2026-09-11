@@ -1,0 +1,917 @@
+<title>HERMOFEST</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BBH+Bartle&family=Michroma&family=Smooch+Sans:wght@700;900&family=Source+Code+Pro:wght@400;600&display=swap">
+<style>
+  /* ── HERMOFEST — brutalismo de sótano, móvil primero ────────────────
+     El 90% entra desde el teléfono: la base es un scroll vertical que
+     decodifica cada nodo al entrar en pantalla. Desktop (>860px) pasa a
+     nodos dispersos con hover. Single-theme a propósito: acá abajo no
+     existe el modo claro. Negro crudo, blanco duro, un azul eléctrico. */
+  :root{
+    --void:  #030308;
+    --ink:   #f2f2f7;
+    --dim:   #70768f;
+    --pulse: #2e45ff;
+    --pulse-hi:#7d8dff;
+    --line:  rgba(242,242,247,.22);
+    --mono:  "Source Code Pro", ui-monospace, Consolas, monospace;
+    --disp:  "BBH Bartle", Impact, "Arial Black", sans-serif;
+    --wide:  "Michroma", "Arial Black", sans-serif;
+    --cond:  "Smooch Sans", "Arial Narrow", sans-serif;
+    --pad-x: clamp(1.3rem, 5vw, 4rem);
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+
+  html{ background:var(--void); }
+  body{
+    background:var(--void); color:var(--ink);
+    font-family:var(--mono); font-size:14px; line-height:1.5;
+    min-height:100dvh; overflow-x:hidden;
+  }
+  html.has-cursor, html.has-cursor *{ cursor:none; }
+
+  ::selection{ background:var(--pulse); color:#fff; }
+  a{ color:inherit; } button{ font:inherit; color:inherit; background:none; border:0; }
+  :focus-visible{ outline:2px solid var(--pulse-hi); outline-offset:4px; }
+
+  /* ── capas de mugre ── */
+  #field{ position:fixed; inset:0; z-index:0; display:block; }
+  .grain{
+    position:fixed; inset:-50%; z-index:7; pointer-events:none; opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain .35s infinite steps(3);
+  }
+  @keyframes grain{
+    0%{transform:translate(0,0)} 33%{transform:translate(-3%,2%)}
+    66%{transform:translate(2%,-3%)} 100%{transform:translate(0,0)}
+  }
+  .scan{
+    position:fixed; inset:0; z-index:6; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px);
+    mix-blend-mode:overlay;
+  }
+  .vig{
+    position:fixed; inset:0; z-index:1; pointer-events:none;
+    background:radial-gradient(ellipse 95% 80% at 50% 45%, transparent 48%, rgba(0,0,4,.88) 100%);
+  }
+
+  /* ── escenario: se tuerce con el scroll (móvil) o el hover (desktop) ── */
+  .stage{
+    position:relative; z-index:2; min-height:100dvh;
+    transform:rotate(var(--tilt, 0deg));
+    transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    display:flex; flex-direction:column;
+    padding:4.4rem var(--pad-x) calc(5.5rem + env(safe-area-inset-bottom));
+    gap:1.5rem;
+  }
+  body.sysfail{ transform:skewX(.8deg) translateX(-4px); }
+  body.invert{ filter:invert(1) hue-rotate(180deg); }
+  body.shake{ animation:shake .16s steps(2); }
+  @keyframes shake{
+    0%{transform:translate(3px,-2px)} 50%{transform:translate(-4px,3px)} 100%{transform:none}
+  }
+
+  /* ── cinta de peligro ── */
+  .tape{
+    position:absolute; left:-8%; right:-8%; top:34%; height:38px; z-index:1;
+    transform:rotate(-5deg); pointer-events:none;
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    background:repeating-linear-gradient(45deg, rgba(242,242,247,.07) 0 14px, transparent 14px 30px);
+  }
+
+  /* ── HUD ── */
+  .hud{
+    position:fixed; z-index:5; font-size:.6rem; letter-spacing:.2em;
+    color:var(--dim); text-transform:uppercase; white-space:nowrap;
+  }
+  .hud--tl{ top:44px; left:18px; }
+  .hud--tr{ top:44px; right:18px; text-align:right; }
+  .hud--br{ bottom:58px; right:22px; display:none; align-items:flex-end; gap:4px; height:22px; }
+  .hud b{ color:var(--ink); font-weight:600; }
+  .dot{
+    display:inline-block; width:8px; height:8px; background:var(--pulse);
+    margin-right:.5em; vertical-align:0; animation:blink 1.4s infinite steps(1);
+  }
+  @keyframes blink{ 0%,100%{opacity:1} 55%{opacity:.1} }
+  .eq{ width:5px; background:var(--ink); animation:eq 1s infinite ease-in-out alternate; transform-origin:bottom; }
+  .eq:nth-child(odd){ background:var(--pulse); }
+  .eq:nth-child(1){ height:30%; animation-duration:.7s } .eq:nth-child(2){ height:75%; animation-duration:.5s }
+  .eq:nth-child(3){ height:45%; animation-duration:.9s } .eq:nth-child(4){ height:90%; animation-duration:.6s }
+  .eq:nth-child(5){ height:55%; animation-duration:.8s }
+  @keyframes eq{ from{transform:scaleY(.2)} to{transform:scaleY(1)} }
+
+  /* ── hero: primera pantalla completa ── */
+  .hero{
+    position:relative; z-index:2;
+    min-height:calc(100svh - 10rem);
+    display:flex; flex-direction:column; justify-content:center; gap:1rem;
+    transform:rotate(-2deg);
+  }
+  .hero__eyebrow{
+    font-family:var(--wide); font-size:.6rem; letter-spacing:.34em;
+    color:var(--pulse-hi); text-transform:uppercase;
+    animation:bootFade .8s .3s both;
+  }
+  .mark{
+    font-family:var(--disp); font-weight:400; line-height:.84;
+    text-transform:uppercase; user-select:none;
+  }
+  .mark__line{
+    position:relative; display:block; width:max-content; max-width:100%;
+    /* BBH Bartle: "HERMO" mide 6.67em — el tamaño se calcula para que
+       entre exacto en el ancho disponible y jamás se parta de línea */
+    font-size:min(11.5rem, calc((100vw - var(--pad-x) * 2 - .5rem) / 6.7));
+    white-space:nowrap;
+    animation:bootFlicker 1.2s both;
+  }
+  .mark__line--ghost{
+    color:transparent; -webkit-text-stroke:2.5px var(--ink);
+    margin-left:.9em; animation-delay:.18s;
+  }
+  .mark__ch{ display:inline-block; }
+  .mark:hover .mark__ch, .mark.buzz .mark__ch{ animation:jit .16s infinite steps(2); }
+  @keyframes jit{ 50%{ transform:translate(var(--jx,2px), var(--jy,-2px)); } }
+  .mark__line::before, .mark__line::after{
+    content:attr(data-text); position:absolute; inset:0; pointer-events:none;
+  }
+  .mark__line::before{
+    color:var(--pulse); -webkit-text-stroke:0;
+    clip-path:inset(50% 0 50% 0); transform:translateX(-7px);
+    animation:glitchA 3.1s infinite steps(1);
+  }
+  .mark__line::after{
+    color:#fff; -webkit-text-stroke:0; mix-blend-mode:screen; opacity:.65;
+    clip-path:inset(50% 0 50% 0); transform:translateX(7px);
+    animation:glitchB 2.6s .4s infinite steps(1);
+  }
+  .mark:hover .mark__line::before, .mark.buzz .mark__line::before{ animation-duration:.55s; }
+  .mark:hover .mark__line::after, .mark.buzz .mark__line::after{ animation-duration:.45s; }
+  @keyframes glitchA{
+    0%{clip-path:inset(14% 0 74% 0)} 3%{clip-path:inset(50% 0 50% 0)}
+    29%{clip-path:inset(62% 0 20% 0); transform:translate(-12px,2px)} 31.5%{clip-path:inset(50% 0 50% 0)}
+    56%{clip-path:inset(36% 0 48% 0)} 58%{clip-path:inset(50% 0 50% 0)}
+    82%{clip-path:inset(82% 0 4% 0); transform:translate(-5px,-2px)} 84.5%{clip-path:inset(50% 0 50% 0)}
+    100%{clip-path:inset(50% 0 50% 0)}
+  }
+  @keyframes glitchB{
+    0%{clip-path:inset(70% 0 12% 0)} 2%{clip-path:inset(50% 0 50% 0)}
+    23%{clip-path:inset(8% 0 84% 0); transform:translate(11px,-2px)} 25%{clip-path:inset(50% 0 50% 0)}
+    48%{clip-path:inset(44% 0 38% 0)} 50.5%{clip-path:inset(50% 0 50% 0)}
+    76%{clip-path:inset(24% 0 62% 0); transform:translate(6px,3px)} 78%{clip-path:inset(50% 0 50% 0)}
+    100%{clip-path:inset(50% 0 50% 0)}
+  }
+  @keyframes bootFlicker{
+    0%{opacity:0} 8%{opacity:1} 12%{opacity:.05} 22%{opacity:1}
+    28%{opacity:.3} 38%{opacity:1} 100%{opacity:1}
+  }
+  @keyframes bootFade{ from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none} }
+  @keyframes bootFadeFlat{ from{opacity:0} }
+
+  .hero__meta{
+    display:flex; gap:1.4em; flex-wrap:wrap;
+    font-size:.64rem; letter-spacing:.24em; color:var(--dim); text-transform:uppercase;
+    animation:bootFade .8s .55s both;
+  }
+  .hero__meta span::before{ content:"///"; color:var(--pulse); margin-right:1.1em; }
+  .hero__meta span:first-child::before{ content:none; }
+  .hero__hint{
+    font-size:.62rem; letter-spacing:.2em; color:var(--dim); text-transform:uppercase;
+    animation:bootFade .8s .85s both; margin-top:1.6rem;
+  }
+  .hero__hint::after{ content:"█"; color:var(--pulse-hi); animation:blink .9s infinite steps(1); margin-left:.3em; }
+  .hero__hint--d{ display:none; }
+
+  /* ── nodos: en móvil son estaciones del scroll ── */
+  .node{
+    position:relative; z-index:2; padding:2.6rem 0;
+    display:grid; grid-template-columns:minmax(0,1fr) auto;
+    grid-template-rows:auto auto; column-gap:clamp(.8rem, 4vw, 2.5rem);
+    animation:bootFadeFlat .7s 1s both;
+  }
+  /* palabra vertical a la derecha de cada box: entera, nunca tapada */
+  .node__word{
+    grid-column:2; grid-row:1 / span 2; justify-self:end;
+    writing-mode:vertical-rl; text-orientation:mixed;
+    font-family:var(--wide); font-size:clamp(1.4rem, 6vw, 2.1rem);
+    letter-spacing:.34em; text-transform:uppercase; line-height:1;
+    color:transparent; -webkit-text-stroke:1px rgba(242,242,247,.5);
+    user-select:none; margin-top:.2rem;
+  }
+  .node__trigger{
+    grid-column:1; grid-row:1; justify-self:start;
+  }
+  .node__panel{ grid-column:1; grid-row:2; }
+  .node__trigger{
+    display:flex; align-items:center; gap:.9em;
+    font-family:var(--wide); font-size:.7rem; letter-spacing:.26em; text-transform:uppercase;
+    border:2px solid var(--ink); background:var(--void);
+    padding:.85em 1.2em; box-shadow:5px 5px 0 rgba(242,242,247,.25);
+    transition:transform .3s cubic-bezier(.2,.8,.2,1), background .12s steps(2), color .12s steps(2), box-shadow .25s;
+  }
+  .node:hover .node__trigger, .node:focus-within .node__trigger, .node.open .node__trigger{
+    background:var(--ink); color:#03030a; box-shadow:5px 5px 0 var(--pulse);
+  }
+  .node.open .node__trigger{ animation:trigshake .18s steps(2); }
+  @keyframes trigshake{ 0%{transform:translate(2px,-2px)} 50%{transform:translate(-3px,2px)} 100%{transform:none} }
+  .node__cross{ position:relative; width:12px; height:12px; flex:none;
+    transition:transform .35s cubic-bezier(.2,.8,.2,1); }
+  .node__cross::before, .node__cross::after{ content:""; position:absolute; background:currentColor; }
+  .node__cross::before{ left:5px; top:0; width:2px; height:12px; }
+  .node__cross::after{ top:5px; left:0; height:2px; width:12px; }
+  .node:hover .node__cross, .node.open .node__cross{ transform:rotate(135deg); }
+
+  /* colapso animado por filas de grid: 0fr → 1fr */
+  .node__panel{
+    display:grid; grid-template-rows:0fr;
+    transition:grid-template-rows .38s steps(6);
+    width:min(380px, 100%);
+  }
+  .node.open .node__panel{ grid-template-rows:1fr; }
+  .node__clip{ overflow:hidden; min-height:0; }
+  .panel{
+    margin-top:16px;
+    background:var(--void); border:2px solid var(--ink);
+    box-shadow:8px 8px 0 var(--pulse);
+    padding:1.15rem 1.3rem 1.35rem; position:relative;
+    opacity:0; transform:translateX(-12px) rotate(-2deg);
+    transition:opacity .18s steps(3), transform .3s steps(4);
+  }
+  .node.open .panel{ opacity:1; transform:none; }
+  .panel__tag{
+    font-size:.6rem; letter-spacing:.28em; color:var(--dim); text-transform:uppercase;
+    margin-bottom:.8rem; border-bottom:1px solid var(--line); padding-bottom:.7rem;
+  }
+  .panel__tag em{ font-style:normal; color:var(--pulse-hi); }
+  .panel__big{
+    font-family:var(--cond); font-weight:900;
+    font-size:clamp(2rem, 10vw, 3.2rem);
+    text-transform:uppercase; line-height:.92; letter-spacing:.02em;
+  }
+  .panel__rule{ height:2px; background:var(--ink); margin:.7rem 0; width:38%; }
+  .panel__sub{
+    font-family:var(--wide); font-size:.6rem; letter-spacing:.22em; color:var(--dim);
+    text-transform:uppercase; margin-top:.7rem; line-height:1.8;
+  }
+  .panel__link{
+    display:inline-block; margin-top:1.1rem;
+    font-family:var(--wide); font-size:.62rem; letter-spacing:.26em; text-transform:uppercase;
+    text-decoration:none; color:var(--ink);
+    border:2px solid var(--ink); padding:.8em 1.2em;
+    box-shadow:4px 4px 0 var(--pulse);
+    transition:background .12s steps(2), color .12s steps(2), box-shadow .2s;
+  }
+  .panel__link:hover, .panel__link:focus-visible, .panel__link:active{
+    background:var(--pulse); border-color:var(--pulse); color:#fff;
+    box-shadow:4px 4px 0 var(--ink);
+  }
+
+  /* ── sello ── */
+  .stamp{
+    position:relative; z-index:2; align-self:flex-start;
+    transform:rotate(-4deg); max-width:300px; margin-top:1.4rem;
+    border:2px dashed var(--dim); padding:.9em 1.1em;
+    font-size:.6rem; letter-spacing:.22em; text-transform:uppercase; color:var(--dim);
+    animation:bootFadeFlat .7s 1.3s both;
+  }
+  .stamp b{ color:var(--ink); font-weight:600; }
+
+  /* ── marquesinas ── */
+  .ticker{
+    position:fixed; left:0; right:0; z-index:5; overflow:hidden;
+    background:var(--void); padding:.5em 0;
+  }
+  .ticker--top{ top:0; border-bottom:2px solid var(--ink); animation:bootFadeFlat .8s 1.2s both; }
+  .ticker--bot{ bottom:0; border-top:2px solid var(--ink); animation:bootFadeFlat .8s 1.35s both;
+    padding-bottom:calc(.5em + env(safe-area-inset-bottom)); }
+  .ticker__track{ display:flex; width:max-content; animation:tick 24s linear infinite; }
+  .ticker--top .ticker__track{ animation:tickrev 30s linear infinite; }
+  .ticker__track span{
+    flex:none; font-size:.62rem; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--dim); white-space:nowrap; padding-right:.3em;
+  }
+  .ticker__track b{ color:var(--ink); font-weight:600; }
+  .ticker__track i{ font-style:normal; color:var(--pulse); }
+  @keyframes tick{ to{ transform:translateX(-50%); } }
+  @keyframes tickrev{ from{ transform:translateX(-50%);} to{ transform:none; } }
+
+  /* ── tipografía de partículas: la nube arma la palabra y, al asentarse,
+     se funde con el texto real nítido (legible en reposo) ── */
+  .pt-live{
+    color:transparent !important; -webkit-text-stroke-color:transparent;
+    transition:color .7s ease, -webkit-text-stroke-color .7s ease;
+  }
+  .pt-live.pt-solid{ color:var(--ink) !important; }
+  .mark__line--ghost.pt-live.pt-solid{ color:transparent !important; -webkit-text-stroke-color:var(--ink); }
+  .node__word.pt-live.pt-solid{ color:transparent !important; -webkit-text-stroke-color:rgba(242,242,247,.5); }
+  .pt-canvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+
+  /* ── mira / cursor (solo puntero fino) ── */
+  .xhair{ position:fixed; inset:0; z-index:20; pointer-events:none; display:none; }
+  html.has-cursor .xhair{ display:block; }
+  .xhair__v{ position:fixed; top:0; bottom:0; width:1px; background:rgba(242,242,247,.16); }
+  .xhair__h{ position:fixed; left:0; right:0; height:1px; background:rgba(242,242,247,.16); }
+  .xhair__dot{
+    position:fixed; width:9px; height:9px; margin:-4.5px 0 0 -4.5px;
+    border:2px solid var(--pulse-hi); background:transparent;
+    transition:transform .15s, background .15s;
+  }
+  .xhair--on .xhair__dot{ transform:rotate(45deg) scale(1.7); background:var(--pulse); border-color:var(--ink); }
+  .xhair__tag{
+    position:fixed; margin:14px 0 0 16px;
+    font-size:.58rem; letter-spacing:.18em; color:var(--pulse-hi); white-space:nowrap;
+  }
+
+  /* ── desktop real (ancho + mouse): nodos dispersos + hover.
+     Las tablets, aunque sean anchas, no tienen hover: se quedan con el
+     flujo vertical de scroll, que no pisa nada. ── */
+  @media (min-width:1100px) and (hover:hover){
+    body{ overflow:hidden; height:100dvh; }
+    .stage{ display:block; padding:0; }
+    .hero{
+      position:absolute; left:50%; top:46%; min-height:0;
+      transform:translate(-50%,-50%) rotate(-2deg);
+      width:min(94vw, 1000px);
+    }
+    .hero__hint--m{ display:none; }
+    .hero__hint--d{ display:block; }
+    .hero__eyebrow{ font-size:.66rem; }
+    .hero__meta{ font-size:.7rem; }
+    .mark__line{ font-size:min(10.5rem, calc(min(94vw, 1000px) / 6.7)); }
+    .tape{ top:31%; height:44px; left:-6%; right:-6%; }
+    .hud--tl{ top:52px; left:26px; } .hud--tr{ top:52px; right:26px; }
+    .hud--br{ display:flex; }
+
+    .node{ position:absolute; padding:0; display:flex; align-items:flex-start; gap:.9rem; }
+    .node__word{ font-size:1.25rem; letter-spacing:.3em; margin-top:0; }
+    /* la palabra va del lado externo (hacia el borde), nunca sobre el hero */
+    .node--act .node__word, .node--hrs .node__word{ order:-1; }
+    .node--loc{ right:7%; top:15%; rotate:2deg; }
+    .node--act{ left:6%;  top:19%; rotate:-3deg; }
+    .node--hrs{ left:11%; bottom:19%; rotate:-1.5deg; }
+
+    .node__panel{
+      position:absolute; top:100%; left:0; display:block;
+      padding-top:0; width:min(330px, 86vw); pointer-events:none; z-index:6;
+    }
+    .node--loc .node__panel{ left:auto; right:0; }
+    .node--hrs .node__panel{ top:auto; bottom:100%; }
+    .node--hrs .panel{ margin-top:0; margin-bottom:16px; transform:translate(-14px,10px) rotate(4deg); }
+    .node--loc .panel{ transform:translate(14px,-10px) rotate(4deg); }
+    .node--act .panel{ transform:translate(-14px,-10px) rotate(-4deg); }
+    .node:hover .node__panel, .node:focus-within .node__panel, .node.open .node__panel{ pointer-events:auto; }
+    .node:hover .panel, .node:focus-within .panel, .node.open .panel{ opacity:1; transform:none; }
+    .node:hover .node__trigger{ animation:trigshake .18s steps(2); }
+    .panel__big{ font-size:3rem; }
+
+    .stamp{ position:absolute; right:8%; bottom:16%; align-self:auto; margin:0; transform:rotate(-7deg); }
+    .ticker__track span{ font-size:.66rem; }
+  }
+
+  /* ── reduced motion: el sótano se queda quieto ── */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration:.01ms !important; animation-iteration-count:1 !important;
+      transition-duration:.01ms !important;
+    }
+    .ticker__track{ animation:none; }
+    .grain{ animation:none; }
+  }
+</style>
+
+<canvas id="field" aria-hidden="true"></canvas>
+<div class="vig" aria-hidden="true"></div>
+
+<div class="stage">
+
+  <header class="hud hud--tl"><b>HF</b></header>
+  <div class="hud hud--tr" aria-hidden="true"><span class="dot"></span>SIGNAL: LIVE</div>
+  <div class="hud hud--br" aria-hidden="true">
+    <span class="eq"></span><span class="eq"></span><span class="eq"></span><span class="eq"></span><span class="eq"></span>
+  </div>
+
+  <main class="hero">
+    <div class="tape" aria-hidden="true"></div>
+    <p class="hero__eyebrow">From the basement</p>
+    <h1 class="mark" aria-label="HERMOFEST">
+      <span class="mark__line" data-text="HERMO" data-pt aria-hidden="true">HERMO</span>
+      <span class="mark__line mark__line--ghost" data-text="FEST" data-pt="stroke" aria-hidden="true">FEST</span>
+    </h1>
+    <p class="hero__meta">
+      <span>Techno</span><span>Below street level</span>
+    </p>
+    <p class="hero__hint hero__hint--m">Scroll to decode the signal ↓</p>
+    <p class="hero__hint hero__hint--d">Hover the nodes to decode the signal</p>
+  </main>
+
+  <section class="node node--loc" data-tilt="0.7">
+    <button class="node__trigger" type="button" aria-expanded="false" aria-controls="panel-loc">
+      <span class="node__cross" aria-hidden="true"></span>
+      <span class="node__label" data-scramble>Location</span>
+    </button>
+    <div class="node__panel" id="panel-loc">
+      <div class="node__clip">
+        <div class="panel">
+          <p class="panel__tag">Location <em>///</em> the venue</p>
+          <p class="panel__big" data-pt>Varez</p>
+          <p class="panel__sub">El Sótano de Viamonte</p>
+          <a class="panel__link" href="https://share.google/WCWd4669IZCVd32CH" target="_blank" rel="noopener">Open map ↗</a>
+        </div>
+      </div>
+    </div>
+    <span class="node__word" data-pt="vertical" aria-hidden="true">VENUE</span>
+  </section>
+
+  <section class="node node--act" data-tilt="-0.7">
+    <button class="node__trigger" type="button" aria-expanded="false" aria-controls="panel-act">
+      <span class="node__cross" aria-hidden="true"></span>
+      <span class="node__label" data-scramble>Line-Up</span>
+    </button>
+    <div class="node__panel" id="panel-act">
+      <div class="node__clip">
+        <div class="panel">
+          <p class="panel__tag">Line-up <em>///</em> the booth</p>
+          <p class="panel__big" data-pt>Barello</p>
+          <div class="panel__rule" aria-hidden="true"></div>
+          <p class="panel__big" data-pt>Ramón</p>
+        </div>
+      </div>
+    </div>
+    <span class="node__word" data-pt="vertical" aria-hidden="true">BOOTH</span>
+  </section>
+
+  <section class="node node--hrs" data-tilt="0.7">
+    <button class="node__trigger" type="button" aria-expanded="false" aria-controls="panel-hrs">
+      <span class="node__cross" aria-hidden="true"></span>
+      <span class="node__label" data-scramble>Schedule</span>
+    </button>
+    <div class="node__panel" id="panel-hrs">
+      <div class="node__clip">
+        <div class="panel">
+          <p class="panel__tag">Schedule <em>///</em> the night</p>
+          <p class="panel__big" data-pt>23:59 → 05:59</p>
+          <p class="panel__sub">Six hours of techno</p>
+        </div>
+      </div>
+    </div>
+    <span class="node__word" data-pt="vertical" aria-hidden="true">SET TIMES</span>
+  </section>
+
+  <div class="stamp"><b>Notice</b> /// sound runs until 05:59</div>
+
+  <div class="ticker ticker--top" aria-hidden="true">
+    <div class="ticker__track">
+      <span>Live signal <i>///</i> below street level <i>///</i> no daylight <i>///</i> six hours <i>///</i> techno <i>///</i>&nbsp;</span>
+      <span>Live signal <i>///</i> below street level <i>///</i> no daylight <i>///</i> six hours <i>///</i> techno <i>///</i>&nbsp;</span>
+    </div>
+  </div>
+  <div class="ticker ticker--bot" aria-hidden="true">
+    <div class="ticker__track">
+      <span><b>Hermofest</b> <i>///</i> techno <i>///</i> <b>El Sótano de Viamonte</b> <i>///</i> 23:59 — 05:59 <i>///</i> <b>Barello</b> <i>///</i> <b>Ramón</b> <i>///</i>&nbsp;</span>
+      <span><b>Hermofest</b> <i>///</i> techno <i>///</i> <b>El Sótano de Viamonte</b> <i>///</i> 23:59 — 05:59 <i>///</i> <b>Barello</b> <i>///</i> <b>Ramón</b> <i>///</i>&nbsp;</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="scan" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="xhair" aria-hidden="true">
+  <div class="xhair__v"></div>
+  <div class="xhair__h"></div>
+  <div class="xhair__dot"></div>
+  <div class="xhair__tag">X:0000 // Y:0000</div>
+</div>
+
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const finePointer = matchMedia('(pointer: fine)').matches;
+  const desktopMQ = matchMedia('(min-width: 1100px) and (hover: hover)');
+  const stage = document.querySelector('.stage');
+
+  /* ── túnel de partículas + estática ──────────────────────────────── */
+  const canvas = document.getElementById('field');
+  const ctx = canvas.getContext('2d');
+  const DPR = Math.min(devicePixelRatio || 1, 2);
+  let W, H, CX, CY;
+
+  function resize(){
+    W = innerWidth; H = innerHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    CX = W / 2; CY = H / 2;
+    ctx.fillStyle = '#030308'; ctx.fillRect(0, 0, W, H);
+  }
+  resize();
+  addEventListener('resize', resize);
+
+  const INK = [242, 242, 247], BLUE = [80, 100, 255];
+  const N = desktopMQ.matches ? 290 : 150;
+  const parts = [];
+  function spawn(p){
+    p.x = Math.random() * 2 - 1;
+    p.y = Math.random() * 2 - 1;
+    p.z = 0.55 + Math.random() * 0.45;
+    p.pz = p.z;
+    p.b = Math.random();
+  }
+  for (let i = 0; i < N; i++){ const p = {}; spawn(p); p.z = 0.05 + Math.random() * 0.95; p.pz = p.z; parts.push(p); }
+
+  const BASE_SPEED = reduced ? 0.0003 : 0.0018;
+  let speed = BASE_SPEED, targetSpeed = BASE_SPEED;
+  let boost = 0.14, targetBoost = 0.14;
+  let mx = 0, my = 0, tmx = 0, tmy = 0;
+  let hasPointer = false;
+  const rings = [];
+
+  function frame(t){
+    /* sin mouse (teléfonos), el punto de fuga deambula solo */
+    if (!hasPointer && !reduced){
+      tmx = Math.sin(t * 0.00013) * 0.3;
+      tmy = Math.cos(t * 0.00017) * 0.25;
+    }
+    speed += (targetSpeed - speed) * 0.055;
+    boost += (targetBoost - boost) * 0.07;
+    mx += (tmx - mx) * 0.05;
+    my += (tmy - my) * 0.05;
+
+    ctx.fillStyle = reduced ? '#030308' : 'rgba(3,3,8,0.36)';
+    ctx.fillRect(0, 0, W, H);
+
+    const f = Math.min(W, H) * 0.85;
+    const vx = CX + mx * 190, vy = CY + my * 190;
+
+    for (const p of parts){
+      p.pz = p.z;
+      p.z -= speed;
+      if (p.z <= 0.02){ spawn(p); continue; }
+      const sx = vx + (p.x * f) / p.z,  sy = vy + (p.y * f) / p.z;
+      const px = vx + (p.x * f) / p.pz, py = vy + (p.y * f) / p.pz;
+      if (sx < -60 || sx > W + 60 || sy < -60 || sy > H + 60){ spawn(p); continue; }
+      const tt = Math.min(1, p.b * 0.4 + boost);
+      const r = INK[0] + (BLUE[0] - INK[0]) * tt;
+      const g = INK[1] + (BLUE[1] - INK[1]) * tt;
+      const b = INK[2] + (BLUE[2] - INK[2]) * tt;
+      const a = Math.min(1, (1 - p.z) * 1.15) * 0.85;
+      ctx.strokeStyle = `rgba(${r|0},${g|0},${b|0},${a.toFixed(3)})`;
+      ctx.lineWidth = (1 - p.z) * 2 + 0.3;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(sx, sy); ctx.stroke();
+    }
+
+    /* estática de TV rota */
+    if (!reduced){
+      ctx.fillStyle = 'rgba(242,242,247,0.05)';
+      for (let i = 0; i < 22; i++){
+        ctx.fillRect(Math.random() * W, Math.random() * H, 2, 2);
+      }
+    }
+
+    for (let i = rings.length - 1; i >= 0; i--){
+      const k = rings[i];
+      k.r += 11; k.a *= 0.92;
+      if (k.a < 0.02){ rings.splice(i, 1); continue; }
+      ctx.strokeStyle = `rgba(80,100,255,${k.a.toFixed(3)})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(k.x, k.y, k.r, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  addEventListener('pointermove', e => {
+    if (e.pointerType === 'mouse') hasPointer = true;
+    tmx = e.clientX / W - 0.5;
+    tmy = e.clientY / H - 0.5;
+  }, { passive: true });
+
+  function pulse(ms){
+    targetSpeed = 0.013; targetBoost = 0.85;
+    clearTimeout(pulse._t);
+    pulse._t = setTimeout(() => { targetSpeed = BASE_SPEED; targetBoost = 0.14; }, ms);
+  }
+
+  /* tap/click en el vacío: invierte el mundo un instante + onda + sacudida
+     (click, no pointerdown: así el scroll táctil no lo dispara) */
+  addEventListener('click', e => {
+    if (e.target.closest('a, button')) return;
+    rings.push({ x: e.clientX, y: e.clientY, r: 6, a: 0.9 });
+    if (reduced) return;
+    speed = Math.min(speed + 0.014, 0.028);
+    document.body.classList.add('invert', 'shake');
+    setTimeout(() => document.body.classList.remove('invert'), 90);
+    setTimeout(() => document.body.classList.remove('shake'), 180);
+  });
+
+  /* falla de sistema aleatoria */
+  if (!reduced){
+    (function sysfail(){
+      setTimeout(() => {
+        document.body.classList.add('sysfail');
+        setTimeout(() => document.body.classList.remove('sysfail'), 130);
+        sysfail();
+      }, 3800 + Math.random() * 4500);
+    })();
+  }
+
+  /* ── letras que tiemblan en el wordmark ──────────────────────────── */
+  const mark = document.querySelector('.mark');
+  document.querySelectorAll('.mark__line').forEach(line => {
+    const text = line.textContent;
+    line.textContent = '';
+    for (const ch of text){
+      const s = document.createElement('span');
+      s.className = 'mark__ch';
+      s.textContent = ch;
+      s.style.setProperty('--jx', ((Math.random() * 10 - 5) | 0) + 'px');
+      s.style.setProperty('--jy', ((Math.random() * 8 - 4) | 0) + 'px');
+      s.style.animationDelay = (Math.random() * -0.2).toFixed(2) + 's';
+      line.appendChild(s);
+    }
+  });
+  /* en el teléfono, tocarlo lo hace zumbar */
+  mark.addEventListener('pointerdown', () => {
+    if (reduced) return;
+    mark.classList.add('buzz');
+    pulse(900);
+    clearTimeout(mark._t);
+    mark._t = setTimeout(() => mark.classList.remove('buzz'), 1100);
+  });
+  mark.addEventListener('pointerenter', () => { targetSpeed = 0.006; });
+  mark.addEventListener('pointerleave', () => { targetSpeed = BASE_SPEED; });
+
+  /* ── decodificador de texto ──────────────────────────────────────── */
+  const CHARS = '!<>-_\\/[]{}=+*^?#@%&';
+  document.querySelectorAll('[data-scramble]').forEach(el => { el.dataset.final = el.textContent; });
+
+  function scramble(el){
+    if (reduced || el._busy) return;
+    el._busy = true;
+    const final = el.dataset.final;
+    const total = Math.max(12, final.length * 2.4);
+    let fr = 0;
+    (function tick(){
+      let out = '';
+      for (let i = 0; i < final.length; i++){
+        out += (i < (fr / total) * final.length || final[i] === ' ')
+          ? final[i]
+          : CHARS[(Math.random() * CHARS.length) | 0];
+      }
+      el.textContent = out;
+      if (++fr <= total) requestAnimationFrame(tick);
+      else { el.textContent = final; el._busy = false; }
+    })();
+  }
+
+  /* ── nodos ───────────────────────────────────────────────────────── */
+  const nodes = [...document.querySelectorAll('.node')];
+
+  function setOpen(node, open){
+    node.classList.toggle('open', open);
+    node.querySelector('.node__trigger').setAttribute('aria-expanded', open);
+    if (open){
+      node.querySelectorAll('[data-scramble]').forEach(scramble);
+      pulse(1000);
+    }
+  }
+
+  nodes.forEach(node => {
+    const trigger = node.querySelector('.node__trigger');
+
+    /* tap: abre/cierra en el flujo táctil. En desktop manda el hover:
+       el click no fija paneles, así nunca quedan varios apilados */
+    trigger.addEventListener('click', () => {
+      if (desktopMQ.matches) return;
+      setOpen(node, !node.classList.contains('open'));
+    });
+
+    /* hover desktop: acelera el túnel, tuerce el escenario, decodifica */
+    node.addEventListener('pointerenter', e => {
+      if (e.pointerType !== 'mouse') return;
+      targetSpeed = 0.013; targetBoost = 0.85;
+      if (!reduced && desktopMQ.matches) stage.style.setProperty('--tilt', node.dataset.tilt + 'deg');
+      node.querySelectorAll('[data-scramble]').forEach(scramble);
+    });
+    node.addEventListener('pointerleave', e => {
+      if (e.pointerType !== 'mouse') return;
+      targetSpeed = BASE_SPEED; targetBoost = 0.14;
+      stage.style.setProperty('--tilt', '0deg');
+    });
+  });
+
+  /* móvil: cada nodo se decodifica solo al entrar en pantalla */
+  if (!desktopMQ.matches && 'IntersectionObserver' in window){
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting && !en.target.dataset.seen){
+          en.target.dataset.seen = '1';
+          setOpen(en.target, true);
+          if (!reduced){
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 180);
+          }
+        }
+      });
+    }, { threshold: 0.45 });
+    nodes.forEach(n => io.observe(n));
+  } else {
+    /* sin observer, que la data quede a la vista */
+    if (!desktopMQ.matches) nodes.forEach(n => setOpen(n, true));
+  }
+
+  /* móvil: el scroll tuerce el escenario */
+  let lastY = scrollY, lastT = performance.now();
+  addEventListener('scroll', () => {
+    const now = performance.now();
+    const dy = scrollY - lastY, dt = Math.max(16, now - lastT);
+    lastY = scrollY; lastT = now;
+    if (reduced || desktopMQ.matches) return;
+    const v = Math.max(-1.3, Math.min(1.3, (dy / dt) * 12));
+    stage.style.setProperty('--tilt', v.toFixed(2) + 'deg');
+    clearTimeout(addEventListener._tt);
+    addEventListener._tt = setTimeout(() => stage.style.setProperty('--tilt', '0deg'), 140);
+  }, { passive: true });
+
+  /* ── tipografía de partículas ────────────────────────────────────
+     Cada texto marcado con [data-pt] se dibuja en un canvas oculto,
+     se muestrean sus píxeles y una nube de puntos lo arma cuando la
+     sección entra en pantalla — y lo deshace cuando la pasás. ─────── */
+  if (!reduced){
+    const PT = [];
+    const PDPR = Math.min(devicePixelRatio || 1, 2);
+    let ptStarted = false;
+
+    function buildOne(el){
+      const mode = el.dataset.pt;               /* "" | stroke | vertical */
+      const cs = getComputedStyle(el);
+      const fs = parseFloat(cs.fontSize);
+      const w = Math.max(2, el.clientWidth), h = Math.max(2, el.clientHeight);
+      if (w < 4 || h < 4 || !fs) return;
+      /* margen extra: los ascendentes/descendentes no se recortan */
+      const M = Math.ceil(fs * 0.4);
+      const W2 = w + M * 2, H2 = h + M * 2;
+      const oc = document.createElement('canvas');
+      oc.width = W2; oc.height = H2;
+      const c = oc.getContext('2d', { willReadFrequently: true });
+      c.fillStyle = '#fff'; c.strokeStyle = '#fff';
+      c.lineWidth = Math.max(2, fs * 0.03);
+      c.font = `${cs.fontStyle} ${cs.fontWeight} ${fs}px ${cs.fontFamily}`;
+      c.textAlign = 'left';
+      const text = (el.dataset.text || el.textContent).trim();
+      const ls = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing) || 0;
+
+      if (mode === 'vertical'){
+        c.textBaseline = 'middle';
+        let y = M + fs * 0.5;
+        for (const ch of text){
+          c.save();
+          c.translate(M + w * 0.5, y);
+          c.rotate(Math.PI / 2);
+          c.fillText(ch, 0, 0);
+          c.restore();
+          y += c.measureText(ch).width + ls;
+        }
+      } else {
+        try{ c.letterSpacing = cs.letterSpacing; }catch(_){}
+        c.textBaseline = 'alphabetic';
+        const m = c.measureText(text);
+        const asc = m.actualBoundingBoxAscent || fs * 0.72;
+        const des = m.actualBoundingBoxDescent || fs * 0.1;
+        const y = M + h / 2 + (asc - des) / 2;   /* centro óptico del glifo */
+        if (mode === 'stroke') c.strokeText(text, M, y);
+        else c.fillText(text, M, y);
+      }
+
+      /* grilla tipo panel LED: puntos parejos y separados = legible */
+      const step = Math.max(2, Math.round(fs / (mode === 'stroke' ? 30 : 22)));
+      const img = c.getImageData(0, 0, W2, H2).data;
+      let pts = [];
+      for (let py = 0; py < H2; py += step){
+        for (let px = 0; px < W2; px += step){
+          if (img[(py * W2 + px) * 4 + 3] > 100){
+            pts.push({
+              tx: px, ty: py,
+              sx: px + (Math.random() - .5) * W2 * 0.9,
+              sy: py + (Math.random() - .5) * (H2 * 2.5 + 160),
+              arc: (Math.random() - .5) * 90,
+              ph: Math.random() * Math.PI * 2,
+              st: Math.random() * 0.75,
+              sz: step * (0.5 + Math.random() * 0.22),
+              blue: Math.random() < 0.16
+            });
+          }
+        }
+      }
+      if (pts.length > 2200){
+        const keep = 2200 / pts.length;
+        pts = pts.filter(() => Math.random() < keep);
+      }
+      if (!pts.length) return;
+
+      const cv = document.createElement('canvas');
+      cv.className = 'pt-canvas';
+      cv.width = W2 * PDPR; cv.height = H2 * PDPR;
+      cv.style.left = -M + 'px'; cv.style.top = -M + 'px';
+      cv.style.width = W2 + 'px'; cv.style.height = H2 + 'px';
+      if (cs.position === 'static') el.style.position = 'relative';
+      el.appendChild(cv);
+      el.classList.add('pt-live');
+      PT.push({
+        el, pts, w2: W2, h2: H2, prog: 0, sol: 0, drawn: true,
+        node: el.closest('.panel') ? el.closest('.node') : null,
+        c2: cv.getContext('2d')
+      });
+    }
+
+    function ptFrame(t){
+      const vh = innerHeight;
+      for (const o of PT){
+        const r = o.el.getBoundingClientRect();
+        let vis = r.width > 0 && r.bottom > vh * 0.06 && r.top < vh * 0.94;
+        /* en desktop, los datos del panel se arman recién al abrirlo */
+        if (vis && o.node && desktopMQ.matches){
+          vis = o.node.matches(':hover') || o.node.classList.contains('open');
+        }
+        /* armado lento y dramático; el desarme es algo más rápido */
+        o.prog += ((vis ? 1 : 0) - o.prog) * (vis ? 0.02 : 0.045);
+
+        /* asentado: la nube se funde con el texto real nítido */
+        const solT = (vis && o.prog > 0.9) ? 1 : 0;
+        o.sol += (solT - o.sol) * 0.06;
+        o.el.classList.toggle('pt-solid', solT === 1);
+
+        if (o.prog < 0.012 || o.sol > 0.985){
+          if (o.drawn){ o.c2.clearRect(0, 0, o.w2 * PDPR, o.h2 * PDPR); o.drawn = false; }
+          continue;
+        }
+        o.drawn = true;
+        const c2 = o.c2;
+        c2.setTransform(PDPR, 0, 0, PDPR, 0, 0);
+        c2.clearRect(0, 0, o.w2, o.h2);
+        for (const p of o.pts){
+          const pp = Math.min(1, Math.max(0, (o.prog - p.st) / (1 - p.st)));
+          const e = pp * pp * (3 - 2 * pp);
+          let x, y;
+          if (pp >= 1){ x = p.tx; y = p.ty; }   /* asentado: nítido */
+          else {
+            const dx = p.sx + Math.sin(t * 0.0011 + p.ph) * 10;
+            const dy = p.sy + Math.cos(t * 0.0009 + p.ph) * 12;
+            const curve = Math.sin(e * Math.PI) * p.arc;   /* vuelo en arco */
+            x = dx + (p.tx - dx) * e + curve * 0.5;
+            y = dy + (p.ty - dy) * e + curve;
+          }
+          c2.globalAlpha = (0.1 + 0.9 * e) * (p.blue ? 0.85 : 1) * (1 - o.sol);
+          c2.fillStyle = p.blue ? '#7d8dff' : '#f2f2f7';
+          c2.fillRect(x, y, p.sz, p.sz);
+        }
+        c2.globalAlpha = 1;
+      }
+      requestAnimationFrame(ptFrame);
+    }
+
+    function initPT(){
+      document.querySelectorAll('[data-pt]').forEach(buildOne);
+      if (!ptStarted && PT.length){ ptStarted = true; requestAnimationFrame(ptFrame); }
+    }
+    document.fonts.ready.then(() => setTimeout(initPT, 60));
+
+    /* al rotar el teléfono o cambiar el ancho, se re-muestrea todo */
+    let rzT;
+    addEventListener('resize', () => {
+      clearTimeout(rzT);
+      rzT = setTimeout(() => {
+        PT.forEach(o => {
+          o.el.classList.remove('pt-live');
+          const cv = o.el.querySelector('.pt-canvas');
+          if (cv) cv.remove();
+        });
+        PT.length = 0;
+        initPT();
+      }, 250);
+    });
+  }
+
+  /* ── mira de francotirador con coordenadas (solo mouse) ──────────── */
+  if (finePointer){
+    document.documentElement.classList.add('has-cursor');
+    const xh = document.querySelector('.xhair');
+    const v = xh.querySelector('.xhair__v');
+    const h = xh.querySelector('.xhair__h');
+    const dot = xh.querySelector('.xhair__dot');
+    const tag = xh.querySelector('.xhair__tag');
+    const pad = n => String(n | 0).padStart(4, '0');
+    addEventListener('pointermove', e => {
+      const x = e.clientX, y = e.clientY;
+      v.style.left = x + 'px';
+      h.style.top = y + 'px';
+      dot.style.left = x + 'px';
+      dot.style.top = y + 'px';
+      tag.style.left = x + 'px';
+      tag.style.top = y + 'px';
+      tag.textContent = `X:${pad(x)} // Y:${pad(y)}`;
+      xh.classList.toggle('xhair--on', !!e.target.closest('a, button'));
+    }, { passive: true });
+  }
+})();
+</script>
