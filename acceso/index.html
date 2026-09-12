@@ -114,7 +114,11 @@
 
   #drawPanel{margin-top:10px;flex:0 0 auto;animation:panelIn .55s cubic-bezier(.2,.8,.2,1) both}
   #drawPanel[hidden]{display:none}
-  #drawPanel.out{opacity:0;transform:translateY(14px);transition:opacity .35s ease,transform .35s ease}
+  /* completado: queda en el historial de la terminal, deshabilitado */
+  #drawPanel.done{opacity:.65;animation:none;margin-bottom:10px}
+  #drawPanel.done #padBox{animation:none}
+  #drawPanel.done #pad{pointer-events:none;cursor:default}
+  #drawPanel.done .dp-foot{display:none}
   @keyframes panelIn{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
   .dp-head{
     display:flex;justify-content:space-between;align-items:center;
@@ -164,8 +168,12 @@
     position:fixed;inset:0;z-index:9;background:var(--ice);
     opacity:0;pointer-events:none;transition:opacity .15s;
   }
+  #destFrame{
+    position:fixed;inset:0;width:100%;height:100dvh;border:0;z-index:8;
+    background:var(--bg);
+  }
   #sndBtn{
-    position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:5;
+    position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:10;
     background:rgba(10,2,4,.6);border:1px solid var(--dim);color:var(--soft);
     padding:8px;line-height:0;cursor:pointer;
     transition:background .2s,color .2s,border-color .2s;
@@ -219,7 +227,7 @@
 /* ================= CONFIG ================= */
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdmlS8BJiuo3GULne0droQQzlkq7ZE7Ppb64JDuxeKLVVxlBQ/formResponse";
 const FORM_FIELD = "entry.1183420728";
-const DEST_URL = "https://andreslanzi.github.io/hermofest/";
+const DEST_URL = "../";   /* la invitación, relativa: funciona en local y en producción */
 const NAMES = [{letter:"A", word:"ANDI"},{letter:"C", word:"CHARLY"}];
 const ANSWER = "SOTANO";
 
@@ -501,11 +509,12 @@ function resizePad(){
   padW = r.width; padH = r.height;
   pad.width = Math.round(padW * dpr); pad.height = Math.round(padH * dpr);
   padCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  redrawStrokes();
+  if(padDone) drawFinalNames(); else redrawStrokes();
 }
 addEventListener("resize", resizePad);
 
 const drawing = { strokes: [], active: false, locked: true, onStroke: null };
+let padDone = false;
 function strokeStyle(){
   padCtx.strokeStyle = "#ff5b6a"; padCtx.lineWidth = 4;
   padCtx.lineCap = "round"; padCtx.lineJoin = "round";
@@ -561,6 +570,30 @@ clearBtn.addEventListener("click", () => {
 
 /* ================= PARTICLES ================= */
 const WORD_FONT = fs => `${fs}px "BBH Bartle", Impact, "Arial Black", sans-serif`;
+
+/* trofeo: los dos nombres quedan en el pad cuando se completa la prueba 1 */
+function drawFinalNames(){
+  padCtx.clearRect(0,0,padW,padH);
+  let fs = padH * .30;
+  padCtx.font = WORD_FONT(fs);
+  const w = Math.max(padCtx.measureText(NAMES[0].word).width, padCtx.measureText(NAMES[1].word).width);
+  if(w > padW * .7) fs *= (padW * .7) / w;
+  padCtx.font = WORD_FONT(fs);
+  padCtx.textAlign = "center"; padCtx.textBaseline = "middle";
+  padCtx.shadowColor = "#b2122a"; padCtx.shadowBlur = 18;
+  padCtx.fillStyle = "#ff5b6a";
+  padCtx.fillText(NAMES[0].word, padW/2, padH*.34);
+  padCtx.fillText(NAMES[1].word, padW/2, padH*.66);
+  padCtx.shadowBlur = 0;
+}
+function finishPad(){
+  padDone = true;
+  drawFinalNames();
+  drawPanel.classList.add("done");
+  dpHint.textContent = "COMPLETADO";
+  term.insertBefore(drawPanel, inform);   /* pasa al historial y scrollea con él */
+  scrollTerm();
+}
 function sampleText(word){
   const oc = document.createElement("canvas");
   oc.width = Math.max(1, padW|0); oc.height = Math.max(1, padH|0);
@@ -779,8 +812,8 @@ async function main(){
   await T(`Bienvenido/a al programa, ${firstCap}.`, { cls:"bright", pause:400 });
   await T("Tu entrada no se regala: se gana.", { cps:24, pause:500 });
   await T("");
-  await T("» PRUEBA 1 DE 2 — LOS ANFITRIONES", { cls:"head" });
-  await T("Dos anfitriones custodian la salida.", { cps:24 });
+  await T("» PRUEBA 1 DE 2 — LOS CUMPLEAÑEROS", { cls:"head" });
+  await T("Dos cumpleañeros custodian la salida.", { cps:24 });
   await T("Dibujá la INICIAL de cualquiera de los dos en la ZONA DE TRAZO.", { cls:"bright" });
   await T("(con el dedo o el mouse)", { cls:"dim", cps:9999 });
 
@@ -789,14 +822,11 @@ async function main(){
   scrollTerm();
 
   const firstHost = await challenge(NAMES, 1);
-  await T("Ahora la inicial del otro anfitrión.", { cls:"bright" });
+  await T("Ahora la inicial del otro cumpleañero.", { cls:"bright" });
   await challenge(NAMES.filter(h => h !== firstHost), 2);
-  await T("ANFITRIONES CONFIRMADOS.", { cls:"soft" });
+  await T("CUMPLEAÑEROS CONFIRMADOS.", { cls:"soft" });
   await sleep(400);
-  drawPanel.classList.add("out");
-  await sleep(380);
-  drawPanel.hidden = true;
-  drawPanel.classList.remove("out");
+  finishPad();
 
   await riddle();
 
@@ -812,9 +842,25 @@ async function main(){
   rain.speed = 9;
   await sleep(1600);
   $("#flash").style.opacity = ".9";
-  await sleep(320);
   store.set("hf_bgm_t", bgm.currentTime);
-  location.replace(DEST_URL);
+  /* la invitación se carga embebida en esta misma página: el audio no se
+     corta porque nunca hay navegación; solo se actualiza la URL */
+  const fr = document.createElement("iframe");
+  fr.id = "destFrame";
+  fr.setAttribute("allow", "autoplay");
+  fr.src = DEST_URL + "?embed=1";
+  let loaded = false;
+  fr.onload = () => { loaded = true; };
+  document.body.appendChild(fr);
+  for(let i = 0; i < 50 && !loaded; i++) await sleep(100);
+  if(loaded){
+    try{ history.replaceState(null, "", DEST_URL); }catch(_){}
+    rain.paused = true;
+    await sleep(300);
+    $("#flash").style.opacity = "0";
+  } else {
+    location.replace(DEST_URL);   /* último recurso: redirección clásica */
+  }
 }
 main();
 </script>
