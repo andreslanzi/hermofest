@@ -322,7 +322,7 @@ const bgm = $("#bgm"), sndBtn = $("#sndBtn");
 const BGM_VOL = 0.45;
 const store = { get:k => { try{ return sessionStorage.getItem(k); }catch(_){ return null; } },
                 set:(k,v) => { try{ sessionStorage.setItem(k,v); }catch(_){} } };
-let bgmStarted = false;
+let bgmStarted = false, bgmArmed = false, bgmUnlocked = false;
 bgm.muted = store.get("hf_bgm_m") === "1";
 sndBtn.classList.toggle("muted", bgm.muted);
 function startAudio(){
@@ -335,15 +335,30 @@ function startAudio(){
     sndBtn.hidden = false;
     const t0 = performance.now();
     const fade = setInterval(() => {
-      const k = Math.min(1, (performance.now() - t0) / 2500);
+      const k = Math.min(1, (performance.now() - t0) / 3000);
       bgm.volume = BGM_VOL * k;
       if(k >= 1) clearInterval(fade);
     }, 50);
     setInterval(() => store.set("hf_bgm_t", bgm.currentTime), 1000);
   }).catch(() => { bgmStarted = false; });
 }
-addEventListener("pointerdown", startAudio);
-addEventListener("keydown", startAudio);
+/* un gesto durante el boot desbloquea el audio en silencio, sin arrancarlo:
+   así la música puede empezar sola justo cuando se pide el nombre */
+function unlockAudio(){
+  if(bgmUnlocked || bgmStarted) return;
+  bgm.volume = 0;
+  bgm.play().then(() => {
+    bgmUnlocked = true;
+    if(bgmArmed) startAudio(); else bgm.pause();
+  }).catch(() => {});
+}
+/* se llama cuando aparece el prompt del nombre */
+function armAudio(){
+  bgmArmed = true;
+  startAudio();
+}
+addEventListener("pointerdown", () => { bgmArmed ? startAudio() : unlockAudio(); });
+addEventListener("keydown", () => { bgmArmed ? startAudio() : unlockAudio(); });
 sndBtn.addEventListener("click", e => {
   e.stopPropagation();
   bgm.muted = !bgm.muted;
@@ -747,6 +762,7 @@ async function main(){
   await T("Elegiste la pastilla roja. No hay vuelta atrás.", { cps:24, pause:400 });
   await T("Nadie puede decirte qué es HERMOFEST. Tenés que verlo por vos mismo.", { cps:24, pause:400 });
   await T("Primero, identificate.", { cls:"soft", pause:300 });
+  armAudio();   /* la música entra junto con el pedido del nombre */
   await T("Ingresá tu NOMBRE COMPLETO:", { cls:"bright" });
 
   let name;
