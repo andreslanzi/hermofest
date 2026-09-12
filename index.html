@@ -281,6 +281,11 @@
   /* el texto real vive oculto hasta que las partículas terminan de armarlo */
   .big.pt-hide{ color:transparent; }
   .pt-canvas{ position:absolute; pointer-events:none; }
+  /* día de la semana: chico, arriba y pegado a la fecha */
+  .dayline{
+    font-family:var(--wide); font-size:clamp(.8rem,3.6vw,1rem); letter-spacing:.24em;
+    color:var(--soft); text-transform:uppercase; margin-bottom:.15rem;
+  }
   /* horario apilado: inicio ↓ fin, para que entre grande en el modal */
   .range{
     font-family:var(--wide); color:var(--pulse-hi); line-height:1;
@@ -423,8 +428,12 @@
   </div>
   <div class="sheet sheet--date" data-panel="date" role="dialog" aria-label="Fecha" aria-modal="true">
     <div class="sheet__tag"><span>Fecha <em>///</em> la noche</span><button class="sheet__close" type="button" aria-label="Cerrar"></button></div>
+    <p class="dayline">Viernes</p>
     <p class="big" data-pt>02.10.26</p>
-    <p class="sub">Viernes</p>
+    <a class="maplink" href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=HERMOFEST&amp;dates=20261002T230000/20261003T060000&amp;ctz=America/Argentina/Buenos_Aires&amp;location=El%20S%C3%B3tano%20de%20Viamonte&amp;details=Acced%C3%A9%20y%20gan%C3%A1%20tu%20entrada%3A%20https%3A%2F%2Fandreslanzi.github.io%2Fhermofest%2F" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18"/><path d="M8 3v3M16 3v3"/></svg>
+      <span>Agendar</span>
+    </a>
   </div>
   <div class="sheet sheet--hrs" data-panel="hrs" role="dialog" aria-label="Horarios" aria-modal="true">
     <div class="sheet__tag"><span>Horarios <em>///</em> la noche</span><button class="sheet__close" type="button" aria-label="Cerrar"></button></div>
