@@ -282,36 +282,43 @@ const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rnd = (a,b) => a + Math.random()*(b-a);
 
-/* ================= MATRIX RAIN (roja) ================= */
+/* ================= MATRIX RAIN (roja) =================
+   Misma técnica fluida que la landing: 60fps, caída fraccional por columna,
+   estela que se desvanece cada frame y cabeza brillante. api.speed se suaviza
+   hacia su objetivo (así la aceleración final del "conejo blanco" es gradual). */
 const rain = (() => {
   const cv = $("#rain"), cx = cv.getContext("2d");
   const GLYPHS = "アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789HERMOFESTXZ";
-  let cols = [], fs = 16, W = 0, H = 0;
+  let cols = [], spd = [], fs = 18, W = 0, H = 0;
   function resize(){
     W = cv.width = innerWidth; H = cv.height = innerHeight;
-    const n = Math.ceil(W/fs);
+    fs = W < 500 ? 15 : 18;
+    const n = Math.ceil(W/fs) + 1;
     cols = Array.from({length:n}, () => rnd(-H/fs, 0));
+    spd  = Array.from({length:n}, () => 0.22 + Math.random()*0.5);
   }
   addEventListener("resize", resize); resize();
   const api = { paused:false, speed:1 };
-  let acc = 0, last = performance.now();
-  function tick(now){
-    const dt = Math.min(now - last, 200); last = now;
+  let cur = 1;
+  function tick(){
     if(!api.paused){
-      acc += dt * api.speed;
-      while(acc >= 50){
-        acc -= 50;
-        cx.fillStyle = "rgba(10,2,4,0.09)"; cx.fillRect(0,0,W,H);
-        cx.font = fs + "px monospace";
-        for(let i=0;i<cols.length;i++){
-          const ch = GLYPHS[Math.random()*GLYPHS.length|0];
-          const y = cols[i]*fs;
-          cx.fillStyle = Math.random() < .04 ? "#ffb6c4" : "#b2122a";
-          cx.fillText(ch, i*fs, y);
-          cols[i] = (y > H && Math.random() > .975) ? 0 : cols[i]+1;
+      cur += (api.speed - cur) * 0.06;
+      cx.fillStyle = "rgba(10,2,4,0.09)"; cx.fillRect(0,0,W,H);
+      cx.font = fs + 'px "Source Code Pro", ui-monospace, monospace';
+      cx.textAlign = "center";
+      for(let i=0;i<cols.length;i++){
+        const x = i*fs + fs/2, y = cols[i]*fs;
+        if(y > 0){
+          cx.fillStyle = Math.random() < .06 ? "#ffdae0" : "#ff5b6a";
+          cx.fillText(GLYPHS[Math.random()*GLYPHS.length|0], x, y);
+          cx.fillStyle = "rgba(150,28,52,0.5)";
+          cx.fillText(GLYPHS[Math.random()*GLYPHS.length|0], x, y - fs);
         }
+        cols[i] += spd[i] * cur;
+        if(y > H && Math.random() > .972) cols[i] = Math.random() * -18;
       }
-    } else { acc = 0; }
+      cx.textAlign = "left";
+    }
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
