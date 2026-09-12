@@ -363,7 +363,7 @@
   <main class="core">
     <h1 class="mark" aria-label="HERMOFEST">
       <span class="mark__line mark__line--img" data-text="HERMO" aria-hidden="true">HERMO</span>
-      <span class="mark__line mark__line--ghost" data-text="FEST" aria-hidden="true">FEST</span>
+      <span class="mark__line mark__line--ghost mark__line--img" data-text="FEST" aria-hidden="true">FEST</span>
     </h1>
     <p class="eyebrow">Desde el sótano</p>
     <button class="btn btn--share" type="button" id="shareBtn" aria-label="Compartir por WhatsApp">
@@ -532,21 +532,23 @@
     }
   });
 
-  /* HERMO relleno con la foto: alinea el bg de cada letra para que la
-     imagen sea una sola, continua a través de las 5 letras (og.jpg 1200x630) */
-  const imgLine = document.querySelector('.mark__line--img');
+  /* HERMOFEST relleno con la foto: una sola imagen mapeada sobre todo el
+     bloque (HERMO arriba, FEST abajo), continua letra a letra (og.jpg 1200x630) */
+  const imgChars = [...document.querySelectorAll('.mark__line--img .mark__ch')];
   function fillMark(){
-    if (!imgLine) return;
-    const lw = imgLine.clientWidth, lh = imgLine.clientHeight;
-    if (!lw || !lh) return;
-    const scale = Math.max(lw/1200, lh/630);
+    if (!imgChars.length) return;
+    const mr = mark.getBoundingClientRect();
+    const mw = mr.width, mh = mr.height;
+    if (!mw || !mh) return;
+    const scale = Math.max(mw/1200, mh/630);
     const bw = 1200*scale, bh = 630*scale;
-    const ox = (lw - bw)/2, oy = (lh - bh)/2;
-    imgLine.querySelectorAll('.mark__ch').forEach(s => {
+    const ox = (mw - bw)/2, oy = (mh - bh)/2;
+    for (const s of imgChars){
+      const r = s.getBoundingClientRect();
       s.style.backgroundSize = bw+'px '+bh+'px';
-      s.style.backgroundPositionX = (ox - s.offsetLeft)+'px';
-      s.style.backgroundPositionY = (oy - s.offsetTop)+'px';
-    });
+      s.style.backgroundPositionX = (ox - (r.left - mr.left))+'px';
+      s.style.backgroundPositionY = (oy - (r.top - mr.top))+'px';
+    }
   }
   fillMark();
   addEventListener('resize', fillMark);
