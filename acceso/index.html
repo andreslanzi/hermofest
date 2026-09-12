@@ -262,7 +262,7 @@
     </form>
   </div>
   <section id="drawPanel" hidden>
-    <div class="dp-head"><span>ZONA DE TRAZO</span><b id="dpHint">INICIAL 1/2</b></div>
+    <div class="dp-head"><span>ZONA DE TRAZO</span><b id="dpHint">LETRA 1/2</b></div>
     <div id="padBox"><canvas id="pad"></canvas></div>
     <div class="dp-foot"><button type="button" id="clearBtn">LIMPIAR</button></div>
   </section>
@@ -909,7 +909,7 @@ function challenge(candidates, idx){
     let fails = 0, evalTimer = null;
     drawing.strokes = []; redrawStrokes();
     drawing.locked = false;
-    dpHint.textContent = `MAYÚSCULA ${idx}/2`;
+    dpHint.textContent = `LETRA ${idx}/2`;
 
     async function accept(host){
       drawing.locked = true;
@@ -1029,7 +1029,7 @@ async function main(){
   await T("");
   await T("» PRUEBA 1 DE 2 — LOS CUMPLEAÑEROS", { cls:"head" });
   await T("Dos cumpleañeros custodian la entrada.", { cps:24 });
-  await T("Dibujá la INICIAL EN MAYÚSCULA de cualquiera de los dos en la ZONA DE TRAZO.", { cls:"bright" });
+  await T("Dibujá la PRIMERA LETRA del nombre de cualquiera de los dos (en MAYÚSCULA) en la ZONA DE TRAZO.", { cls:"bright" });
   await T("(con el dedo o el mouse)", { cls:"dim", cps:9999 });
 
   drawPanel.hidden = false;
@@ -1037,7 +1037,7 @@ async function main(){
   scrollTerm();
 
   const firstHost = await challenge(NAMES, 1);
-  await T("Ahora la inicial en MAYÚSCULA del otro cumpleañero.", { cls:"bright" });
+  await T("Ahora la PRIMERA LETRA del nombre del otro cumpleañero (en MAYÚSCULA).", { cls:"bright" });
   const secondHost = await challenge(NAMES.filter(h => h !== firstHost), 2);
   await T("CUMPLEAÑEROS CONFIRMADOS.", { cls:"soft" });
   await sleep(400);
