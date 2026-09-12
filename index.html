@@ -133,7 +133,11 @@
     color:transparent; -webkit-text-stroke:2.5px var(--ink);
     margin-left:.9em; animation-delay:.15s;
   }
-  .mark__ch{ display:inline-block; }
+  .mark__ch{ display:inline-block; transition:opacity .6s ease; }
+  /* llegada desde /acceso: el título aparece recién cuando sus partículas lo armaron */
+  .mark.assembling .mark__ch,
+  .mark.assembling .mark__line::before,
+  .mark.assembling .mark__line::after{ opacity:0; }
   /* HERMO: la foto de los cumpleañeros vista a través de las letras.
      El bg de cada letra lo alinea el JS (fillMark) para que sea continuo. */
   .mark__line--img .mark__ch{
@@ -535,6 +539,8 @@
 
   /* ── título: letras que tiemblan ── */
   const mark = document.querySelector('.mark');
+  /* llegada desde /acceso: las letras esperan ocultas a que las partículas las armen */
+  if (/[?&]embed=1/.test(location.search)) mark.classList.add('assembling');
   document.querySelectorAll('.mark__line').forEach(line => {
     const text=line.textContent; line.textContent='';
     for (const ch of text){
@@ -676,6 +682,24 @@
   };
 
   const texts = [...document.querySelectorAll('.big[data-pt]')].map(el => new ParticleText(el));
+
+  /* ── llegada desde /acceso (?embed=1): la terminal se deshizo en partículas
+     y acá el título HERMO/FEST se arma con las suyas. Arranca cuando la
+     página madre avisa que ya nos hizo visibles (o sola, si se abre suelta). */
+  if (/[?&]embed=1/.test(location.search)){
+    let began = false;
+    const go = () => {
+      if (began) return; began = true;
+      const parts = [...document.querySelectorAll('.mark__line')].map(el => new ParticleText(el));
+      parts.forEach(p => { texts.push(p); p.assemble(); });
+      const fin = () => mark.classList.remove('assembling');
+      const poll = () => { if (parts.every(p => p.done)) fin(); else setTimeout(poll, 120); };
+      setTimeout(poll, 500);
+      setTimeout(fin, 3400);   /* red de seguridad: el título nunca queda oculto */
+    };
+    addEventListener('message', e => { if (e.data === 'hf:assemble') go(); });
+    setTimeout(go, 2500);
+  }
   (function ptLoop(t){ for (const o of texts) o.step(t); requestAnimationFrame(ptLoop); })(0);
 
   /* ── abrir / cerrar boxes ─────────────────────────────────────────── */
@@ -811,11 +835,32 @@
     addEventListener('pointerdown', () => { ensureGraph(); startAudio(); });
     addEventListener('keydown', () => { ensureGraph(); startAudio(); });
   }
+  /* des-mutear = arrancar sí o sí: cubre contexto suspendido (iOS al volver
+     del fondo), ganancia en 0, play() rechazado antes o mute guardado */
+  function kickAudio(){
+    ensureGraph();
+    if (actx && actx.state !== 'running') actx.resume().catch(()=>{});
+    if (gainN && actx){ const now = actx.currentTime; gainN.gain.cancelScheduledValues(now); gainN.gain.setValueAtTime(BGM_VOL, now); }
+    bgm.volume = 1; bgm.muted = false;
+    const p = bgm.play();
+    if (p && p.then) p.then(() => {
+      if (!bgmStarted){ bgmStarted = true; sndBtn.hidden = false; setInterval(() => store.set('hf_bgm_t', bgm.currentTime), 1000); }
+    }).catch(()=>{});
+  }
   sndBtn.addEventListener('click', e => {
     e.stopPropagation();
-    bgm.muted = !bgm.muted;
-    sndBtn.classList.toggle('muted', bgm.muted);
-    store.set('hf_bgm_m', bgm.muted ? '1' : '0');
+    const playing = bgmStarted && !bgm.paused;
+    const mute = playing ? !bgm.muted : false;   /* si no suena, cualquier toque la arranca */
+    bgm.muted = mute;
+    sndBtn.classList.toggle('muted', mute);
+    store.set('hf_bgm_m', mute ? '1' : '0');
+    if (!mute) kickAudio();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && bgmStarted && !bgm.muted){
+      if (actx && actx.state === 'suspended') actx.resume().catch(()=>{});
+      if (bgm.paused) bgm.play().catch(()=>{});
+    }
   });
 
   /* ── compartir por WhatsApp ─────────────────────────────────────────
