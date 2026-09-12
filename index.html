@@ -129,6 +129,15 @@
     margin-left:.9em; animation-delay:.15s;
   }
   .mark__ch{ display:inline-block; }
+  /* HERMO: la foto de los cumpleañeros vista a través de las letras.
+     El bg de cada letra lo alinea el JS (fillMark) para que sea continuo. */
+  .mark__line--img .mark__ch{
+    background-color:var(--ink);         /* fallback si la imagen no carga */
+    background-image:url("acceso/og.jpg");
+    background-repeat:no-repeat;
+    -webkit-background-clip:text; background-clip:text;
+    color:transparent; -webkit-text-fill-color:transparent;
+  }
   .mark:hover .mark__ch, .mark.buzz .mark__ch{ animation:jit .16s infinite steps(2); }
   @keyframes jit{ 50%{ transform:translate(var(--jx,2px), var(--jy,-2px)); } }
   .mark__line::before, .mark__line::after{
@@ -353,7 +362,7 @@
 
   <main class="core">
     <h1 class="mark" aria-label="HERMOFEST">
-      <span class="mark__line" data-text="HERMO" aria-hidden="true">HERMO</span>
+      <span class="mark__line mark__line--img" data-text="HERMO" aria-hidden="true">HERMO</span>
       <span class="mark__line mark__line--ghost" data-text="FEST" aria-hidden="true">FEST</span>
     </h1>
     <p class="eyebrow">Desde el sótano</p>
@@ -522,6 +531,26 @@
       line.appendChild(s);
     }
   });
+
+  /* HERMO relleno con la foto: alinea el bg de cada letra para que la
+     imagen sea una sola, continua a través de las 5 letras (og.jpg 1200x630) */
+  const imgLine = document.querySelector('.mark__line--img');
+  function fillMark(){
+    if (!imgLine) return;
+    const lw = imgLine.clientWidth, lh = imgLine.clientHeight;
+    if (!lw || !lh) return;
+    const scale = Math.max(lw/1200, lh/630);
+    const bw = 1200*scale, bh = 630*scale;
+    const ox = (lw - bw)/2, oy = (lh - bh)/2;
+    imgLine.querySelectorAll('.mark__ch').forEach(s => {
+      s.style.backgroundSize = bw+'px '+bh+'px';
+      s.style.backgroundPositionX = (ox - s.offsetLeft)+'px';
+      s.style.backgroundPositionY = (oy - s.offsetTop)+'px';
+    });
+  }
+  fillMark();
+  addEventListener('resize', fillMark);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fillMark);
   mark.addEventListener('pointerdown', () => {
     if (reduced) return;
     mark.classList.add('buzz'); pulse(900);
