@@ -813,20 +813,20 @@
      dispositivo lo permite); si no existe, cae a wa.me con el link. */
   const shareBtn = document.getElementById('shareBtn');
   const SHARE_URL = 'https://andreslanzi.github.io/hermofest/';
-  const SHARE_TEXT = 'HERMOFEST v26 — Desde el sótano';
+  const SHARE_TEXT = 'HERMOFEST v2.0.26 — Desde el sótano';
   shareBtn.addEventListener('click', async e => {
     e.stopPropagation();
     try{
       if (navigator.share){
         let files = null;
         try{
-          const blob = await (await fetch('acceso/og.jpg')).blob();
-          const f = new File([blob], 'hermofest.jpg', { type:'image/jpeg' });
+          const blob = await (await fetch('flyer.jpg')).blob();   /* comparte el flyer */
+          const f = new File([blob], 'hermofest-flyer.jpg', { type:'image/jpeg' });
           if (navigator.canShare && navigator.canShare({ files:[f] })) files = [f];
         }catch(_){}
         await navigator.share(files
           ? { files, text: SHARE_TEXT + '\n' + SHARE_URL }
-          : { title: 'HERMOFEST v26', text: SHARE_TEXT, url: SHARE_URL });
+          : { title: 'HERMOFEST v2.0.26', text: SHARE_TEXT, url: SHARE_URL });
         return;
       }
     }catch(err){
