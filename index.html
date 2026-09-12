@@ -273,12 +273,13 @@
     text-transform:uppercase; margin-top:1.2rem; line-height:1.7;
   }
   .maplink{
-    display:inline-block; margin-top:1.7rem;
+    display:inline-flex; align-items:center; gap:.65em; margin-top:1.7rem;
     font-family:var(--wide); font-size:clamp(1.3rem,6.2vw,1.53rem); letter-spacing:.14em; text-transform:uppercase;
     text-decoration:none; color:var(--ink);
     border:2px solid var(--ink); padding:1.15em 1.8em; box-shadow:5px 5px 0 var(--pulse);
     transition:background .12s steps(2), color .12s steps(2), box-shadow .2s;
   }
+  .maplink svg{ height:1.15em; width:auto; flex:none; }
   .maplink:hover,.maplink:focus-visible,.maplink:active{
     background:var(--pulse); border-color:var(--pulse); color:#fff; box-shadow:4px 4px 0 var(--ink);
   }
@@ -382,7 +383,10 @@
     <div class="sheet__tag"><span>Ubicación <em>///</em> el lugar</span><button class="sheet__close" type="button" aria-label="Cerrar"></button></div>
     <p class="big" data-pt>Varez</p>
     <p class="sub">El Sótano de Viamonte</p>
-    <a class="maplink" href="https://share.google/WCWd4669IZCVd32CH" target="_blank" rel="noopener">Abrir mapa ↗</a>
+    <a class="maplink" href="https://share.google/WCWd4669IZCVd32CH" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12s-8-7-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg>
+      <span>Abrir mapa</span>
+    </a>
   </div>
   <div class="sheet sheet--act" data-panel="act" role="dialog" aria-label="Line-Up" aria-modal="true">
     <div class="sheet__tag"><span>Line-up <em>///</em> la cabina</span><button class="sheet__close" type="button" aria-label="Cerrar"></button></div>
@@ -452,7 +456,7 @@
     fontSize = W < 500 ? 15 : 19;
     cols = Math.ceil(W / fontSize) + 1;
     drops = Array.from({length:cols}, () => Math.random() * -60);
-    colSpd = Array.from({length:cols}, () => 0.45 + Math.random() * 0.85);
+    colSpd = Array.from({length:cols}, () => 0.22 + Math.random() * 0.45);
   }
   setupRain();
 
@@ -744,8 +748,8 @@
      navigator.share abre el menú nativo (con el flyer adjunto si el
      dispositivo lo permite); si no existe, cae a wa.me con el link. */
   const shareBtn = document.getElementById('shareBtn');
-  const SHARE_URL = 'https://andreslanzi.github.io/hermofest/acceso/';
-  const SHARE_TEXT = 'HERMOFEST v26 — Accedé y ganá tu entrada';
+  const SHARE_URL = 'https://andreslanzi.github.io/hermofest/';
+  const SHARE_TEXT = 'HERMOFEST v26 — Desde el sótano';
   shareBtn.addEventListener('click', async e => {
     e.stopPropagation();
     try{
