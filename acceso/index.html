@@ -10,7 +10,7 @@
 <meta property="og:title" content="⛔ ACCESO RESTRINGIDO">
 <meta property="og:description" content="Tu entrada no se regala: se gana. ¿Te animás?">
 <meta property="og:url" content="https://andreslanzi.github.io/hermofest/acceso/">
-<meta property="og:image" content="https://andreslanzi.github.io/hermofest/acceso/og.jpg">
+<meta property="og:image" content="https://andreslanzi.github.io/hermofest/acceso/og.jpg?v=2">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -515,6 +515,7 @@ addEventListener("resize", resizePad);
 
 const drawing = { strokes: [], active: false, locked: true, onStroke: null };
 let padDone = false;
+let solvedOrder = NAMES;   /* orden real en que se resolvieron las iniciales */
 function strokeStyle(){
   padCtx.strokeStyle = "#ff5b6a"; padCtx.lineWidth = 4;
   padCtx.lineCap = "round"; padCtx.lineJoin = "round";
@@ -576,17 +577,18 @@ function drawFinalNames(){
   padCtx.clearRect(0,0,padW,padH);
   let fs = padH * .30;
   padCtx.font = WORD_FONT(fs);
-  const w = Math.max(padCtx.measureText(NAMES[0].word).width, padCtx.measureText(NAMES[1].word).width);
+  const w = Math.max(padCtx.measureText(solvedOrder[0].word).width, padCtx.measureText(solvedOrder[1].word).width);
   if(w > padW * .7) fs *= (padW * .7) / w;
   padCtx.font = WORD_FONT(fs);
   padCtx.textAlign = "center"; padCtx.textBaseline = "middle";
   padCtx.shadowColor = "#b2122a"; padCtx.shadowBlur = 18;
   padCtx.fillStyle = "#ff5b6a";
-  padCtx.fillText(NAMES[0].word, padW/2, padH*.34);
-  padCtx.fillText(NAMES[1].word, padW/2, padH*.66);
+  padCtx.fillText(solvedOrder[0].word, padW/2, padH*.34);
+  padCtx.fillText(solvedOrder[1].word, padW/2, padH*.66);
   padCtx.shadowBlur = 0;
 }
-function finishPad(){
+function finishPad(order){
+  solvedOrder = order;
   padDone = true;
   drawFinalNames();
   drawPanel.classList.add("done");
@@ -796,7 +798,7 @@ async function main(){
   await T("Nadie puede decirte qué es HERMOFEST. Tenés que verlo por vos mismo.", { cps:24, pause:400 });
   await T("Primero, identificate.", { cls:"soft", pause:300 });
   armAudio();   /* la música entra junto con el pedido del nombre */
-  await T("Ingresá tu NOMBRE COMPLETO:", { cls:"bright" });
+  await T("Ingresá tu NOMBRE Y APELLIDO:", { cls:"bright" });
 
   let name;
   for(;;){
@@ -823,10 +825,10 @@ async function main(){
 
   const firstHost = await challenge(NAMES, 1);
   await T("Ahora la inicial del otro cumpleañero.", { cls:"bright" });
-  await challenge(NAMES.filter(h => h !== firstHost), 2);
+  const secondHost = await challenge(NAMES.filter(h => h !== firstHost), 2);
   await T("CUMPLEAÑEROS CONFIRMADOS.", { cls:"soft" });
   await sleep(400);
-  finishPad();
+  finishPad([firstHost, secondHost]);
 
   await riddle();
 
