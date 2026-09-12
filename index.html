@@ -98,7 +98,7 @@
     gap:1rem;
   }
   .eyebrow{
-    font-family:var(--wide); font-size:clamp(.56rem,2.6vw,.7rem); letter-spacing:.34em;
+    font-family:var(--wide); font-size:clamp(.64rem,3vw,.78rem); letter-spacing:.3em;
     color:var(--pulse-hi); text-transform:uppercase;
     animation:bootFade .8s .2s both;
   }
@@ -158,7 +158,7 @@
 
   .meta{
     display:flex; gap:1.2em; flex-wrap:wrap; justify-content:center;
-    font-size:clamp(.58rem,2.6vw,.72rem); letter-spacing:.24em; color:var(--dim); text-transform:uppercase;
+    font-size:clamp(.68rem,3.2vw,.82rem); letter-spacing:.2em; color:var(--dim); text-transform:uppercase;
     animation:bootFade .8s .5s both;
   }
   .meta span::before{ content:"///"; color:var(--pulse); margin-right:1.1em; }
@@ -167,11 +167,11 @@
   /* ── botones repartidos alrededor del título ── */
   .btn{
     position:absolute; z-index:4;
-    display:inline-flex; align-items:center; gap:.8em;
-    font-family:var(--wide); letter-spacing:.22em; text-transform:uppercase;
-    font-size:clamp(.72rem, 3.4vw, 1rem);
+    display:inline-flex; align-items:center; gap:.7em;
+    font-family:var(--wide); letter-spacing:.18em; text-transform:uppercase;
+    font-size:clamp(.92rem, 4.4vw, 1.15rem);
     border:2px solid var(--ink); background:var(--void); color:var(--ink);
-    padding:1em 1.4em; box-shadow:5px 5px 0 rgba(242,242,247,.28);
+    padding:1.05em 1.45em; box-shadow:5px 5px 0 rgba(242,242,247,.28);
     transition:transform .18s cubic-bezier(.2,.8,.2,1), background .12s steps(2), color .12s steps(2), box-shadow .2s;
     animation:bootFade .7s both;
   }
@@ -217,7 +217,7 @@
   .sheet.on{ opacity:1; transform:translate(-50%,-50%) rotate(0); pointer-events:auto; }
   .sheet__tag{
     display:flex; justify-content:space-between; align-items:center; gap:1em;
-    font-size:clamp(.6rem,2.8vw,.7rem); letter-spacing:.24em; color:var(--dim); text-transform:uppercase;
+    font-size:clamp(.7rem,3.4vw,.8rem); letter-spacing:.22em; color:var(--dim); text-transform:uppercase;
     margin-bottom:1.1rem; border-bottom:1px solid var(--line); padding-bottom:.9rem;
   }
   .sheet__tag em{ font-style:normal; color:var(--pulse-hi); }
@@ -243,14 +243,14 @@
   .pt-canvas{ position:absolute; pointer-events:none; }
   .rule{ height:2px; background:var(--ink); margin:.9rem 0; width:40%; }
   .sub{
-    font-family:var(--wide); font-size:clamp(.64rem,3vw,.76rem); letter-spacing:.2em; color:var(--dim);
-    text-transform:uppercase; margin-top:.9rem; line-height:1.8;
+    font-family:var(--wide); font-size:clamp(.78rem,3.8vw,.9rem); letter-spacing:.16em; color:var(--dim);
+    text-transform:uppercase; margin-top:1rem; line-height:1.7;
   }
   .maplink{
-    display:inline-block; margin-top:1.4rem;
-    font-family:var(--wide); font-size:clamp(.66rem,3vw,.78rem); letter-spacing:.2em; text-transform:uppercase;
+    display:inline-block; margin-top:1.5rem;
+    font-family:var(--wide); font-size:clamp(.8rem,3.8vw,.92rem); letter-spacing:.16em; text-transform:uppercase;
     text-decoration:none; color:var(--ink);
-    border:2px solid var(--ink); padding:1em 1.5em; box-shadow:4px 4px 0 var(--pulse);
+    border:2px solid var(--ink); padding:1.1em 1.7em; box-shadow:4px 4px 0 var(--pulse);
     transition:background .12s steps(2), color .12s steps(2), box-shadow .2s;
   }
   .maplink:hover,.maplink:focus-visible,.maplink:active{
@@ -340,18 +340,6 @@
     <span class="btn__x" aria-hidden="true"></span><span>Horarios</span>
   </button>
 
-  <div class="ticker ticker--top" aria-hidden="true">
-    <div class="ticker__track">
-      <span>Live signal <i>///</i> below street level <i>///</i> no daylight <i>///</i> six hours <i>///</i> techno <i>///</i>&nbsp;</span>
-      <span>Live signal <i>///</i> below street level <i>///</i> no daylight <i>///</i> six hours <i>///</i> techno <i>///</i>&nbsp;</span>
-    </div>
-  </div>
-  <div class="ticker ticker--bot" aria-hidden="true">
-    <div class="ticker__track">
-      <span><b>Hermofest</b> <i>///</i> techno <i>///</i> <b>El Sótano de Viamonte</b> <i>///</i> 23:59 — 05:59 <i>///</i> <b>Barello</b> <i>///</i> <b>Ramón</b> <i>///</i>&nbsp;</span>
-      <span><b>Hermofest</b> <i>///</i> techno <i>///</i> <b>El Sótano de Viamonte</b> <i>///</i> 23:59 — 05:59 <i>///</i> <b>Barello</b> <i>///</i> <b>Ramón</b> <i>///</i>&nbsp;</span>
-    </div>
-  </div>
 </div>
 
 <div class="overlay" id="overlay">
