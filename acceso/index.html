@@ -327,7 +327,7 @@ term.addEventListener("click", () => { if(!inform.hidden) inp.focus(); });
    La posición y el mute se guardan en sessionStorage para que la invitación
    principal retome la música donde quedó tras el redirect. */
 const bgm = $("#bgm"), sndBtn = $("#sndBtn");
-const BGM_VOL = 0.45;
+const BGM_VOL = 1;
 const store = { get:k => { try{ return sessionStorage.getItem(k); }catch(_){ return null; } },
                 set:(k,v) => { try{ sessionStorage.setItem(k,v); }catch(_){} } };
 let bgmStarted = false, bgmArmed = false, bgmUnlocked = false;
@@ -343,7 +343,7 @@ function startAudio(){
     sndBtn.hidden = false;
     const t0 = performance.now();
     const fade = setInterval(() => {
-      const k = Math.min(1, (performance.now() - t0) / 3000);
+      const k = Math.min(1, (performance.now() - t0) / 5000);
       bgm.volume = BGM_VOL * k;
       if(k >= 1) clearInterval(fade);
     }, 50);

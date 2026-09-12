@@ -657,7 +657,7 @@
      con la primera interacción. Sin acceso/soundtrack.mp3, silencio. */
   const bgm = document.getElementById('bgm');
   const sndBtn = document.getElementById('sndBtn');
-  const BGM_VOL = 0.45;
+  const BGM_VOL = 1;
   const store = { get:k => { try{ return sessionStorage.getItem(k); }catch(_){ return null; } },
                   set:(k,v) => { try{ sessionStorage.setItem(k,v); }catch(_){} } };
   let bgmStarted = false;
