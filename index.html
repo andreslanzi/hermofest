@@ -586,7 +586,13 @@
     c.fillStyle='#fff';
     c.font = `${cs.fontStyle} ${cs.fontWeight} ${fs}px ${cs.fontFamily}`;
     c.textAlign='left'; c.textBaseline='alphabetic';
-    const text = el.textContent.trim();
+    /* aplicar el mismo text-transform del CSS para que las partículas
+       formen EXACTAMENTE el texto final (ej. "Barello" → "BARELLO") */
+    let text = el.textContent.trim();
+    const tt = cs.textTransform;
+    if (tt === 'uppercase') text = text.toUpperCase();
+    else if (tt === 'lowercase') text = text.toLowerCase();
+    else if (tt === 'capitalize') text = text.replace(/\b\w/g, ch => ch.toUpperCase());
     const m = c.measureText(text);
     const asc = m.actualBoundingBoxAscent || fs*0.72, des = m.actualBoundingBoxDescent || fs*0.1;
     c.fillText(text, M, M + h/2 + (asc-des)/2);
