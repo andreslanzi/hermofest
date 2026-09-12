@@ -333,28 +333,64 @@ const store = { get:k => { try{ return sessionStorage.getItem(k); }catch(_){ ret
 let bgmStarted = false, bgmArmed = false, bgmUnlocked = false;
 bgm.muted = store.get("hf_bgm_m") === "1";
 sndBtn.classList.toggle("muted", bgm.muted);
-function startAudio(){
-  if(bgmStarted) return;
-  bgmStarted = true;
-  const t = parseFloat(store.get("hf_bgm_t"));
-  if(t > 0 && isFinite(t)) try{ bgm.currentTime = t; }catch(_){}
-  bgm.volume = 0;
-  bgm.play().then(() => {
-    sndBtn.hidden = false;
+
+/* Fade vía Web Audio (GainNode): en iOS audio.volume es de solo lectura,
+   así que el fade por volumen no se oye; la ganancia sí funciona.
+   El grafo se crea solo dentro de un gesto del usuario y solo si la música
+   no arrancó ya por autoplay (en ese caso se usa el fade por volumen). */
+const FADE_S = 5;
+let actx = null, gain = null;
+function ensureGraph(){
+  if(actx || bgmStarted) return;
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    actx = new AC();
+    const src = actx.createMediaElementSource(bgm);
+    gain = actx.createGain();
+    gain.gain.value = 0;
+    src.connect(gain); gain.connect(actx.destination);
+  }catch(_){ actx = null; gain = null; }
+}
+function beginFade(){
+  if(gain && actx){
+    if(actx.state === "suspended") actx.resume().catch(()=>{});
+    bgm.volume = 1;
+    const now = actx.currentTime;
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(BGM_VOL, now + FADE_S);
+  } else {
+    bgm.volume = 0;
     const t0 = performance.now();
     const fade = setInterval(() => {
-      const k = Math.min(1, (performance.now() - t0) / 5000);
+      const k = Math.min(1, (performance.now() - t0) / (FADE_S * 1000));
       bgm.volume = BGM_VOL * k;
       if(k >= 1) clearInterval(fade);
     }, 50);
+  }
+}
+let bgmTimeSet = false;
+function startAudio(){
+  if(bgmStarted) return;   /* solo true tras un play() exitoso */
+  if(!bgmTimeSet){
+    const t = parseFloat(store.get("hf_bgm_t"));
+    if(t > 0 && isFinite(t)) try{ bgm.currentTime = t; }catch(_){}
+    bgmTimeSet = true;
+  }
+  bgm.play().then(() => {
+    if(bgmStarted) return;   /* otro intento simultáneo ya arrancó el fade */
+    bgmStarted = true;
+    sndBtn.hidden = false;
+    beginFade();
     setInterval(() => store.set("hf_bgm_t", bgm.currentTime), 1000);
-  }).catch(() => { bgmStarted = false; });
+  }).catch(() => {});
 }
 /* un gesto durante el boot desbloquea el audio en silencio, sin arrancarlo:
    así la música puede empezar sola justo cuando se pide el nombre */
 function unlockAudio(){
   if(bgmUnlocked || bgmStarted) return;
-  bgm.volume = 0;
+  bgm.volume = 0;   /* con grafo, la ganancia en 0 ya lo silencia igual */
   bgm.play().then(() => {
     bgmUnlocked = true;
     if(bgmArmed) startAudio(); else bgm.pause();
@@ -365,8 +401,12 @@ function armAudio(){
   bgmArmed = true;
   startAudio();
 }
-addEventListener("pointerdown", () => { bgmArmed ? startAudio() : unlockAudio(); });
-addEventListener("keydown", () => { bgmArmed ? startAudio() : unlockAudio(); });
+function onGesture(){
+  ensureGraph();
+  if(bgmArmed) startAudio(); else unlockAudio();
+}
+addEventListener("pointerdown", onGesture);
+addEventListener("keydown", onGesture);
 sndBtn.addEventListener("click", e => {
   e.stopPropagation();
   bgm.muted = !bgm.muted;

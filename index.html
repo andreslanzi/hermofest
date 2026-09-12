@@ -660,33 +660,64 @@
   const BGM_VOL = 1;
   const store = { get:k => { try{ return sessionStorage.getItem(k); }catch(_){ return null; } },
                   set:(k,v) => { try{ sessionStorage.setItem(k,v); }catch(_){} } };
-  let bgmStarted = false;
+  let bgmStarted = false, bgmTimeSet = false;
   bgm.muted = store.get('hf_bgm_m') === '1';
   sndBtn.classList.toggle('muted', bgm.muted);
-  function startAudio(){
-    if (bgmStarted) return;
-    bgmStarted = true;
-    const t = parseFloat(store.get('hf_bgm_t'));
-    if (t > 0 && isFinite(t)) try{ bgm.currentTime = t; }catch(_){}
-    bgm.volume = 0;
-    bgm.play().then(() => {
-      sndBtn.hidden = false;
+  /* fade vía GainNode: en iOS audio.volume es de solo lectura; el grafo se
+     crea solo dentro de un gesto y solo si el audio no arrancó por autoplay */
+  const FADE_S = 1.5;
+  let actx = null, gainN = null;
+  function ensureGraph(){
+    if (actx || bgmStarted) return;
+    try{
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      actx = new AC();
+      const src = actx.createMediaElementSource(bgm);
+      gainN = actx.createGain(); gainN.gain.value = 0;
+      src.connect(gainN); gainN.connect(actx.destination);
+    }catch(_){ actx = null; gainN = null; }
+  }
+  function beginFade(){
+    if (gainN && actx){
+      if (actx.state === 'suspended') actx.resume().catch(()=>{});
+      bgm.volume = 1;
+      const now = actx.currentTime;
+      gainN.gain.cancelScheduledValues(now);
+      gainN.gain.setValueAtTime(0, now);
+      gainN.gain.linearRampToValueAtTime(BGM_VOL, now + FADE_S);
+    } else {
+      bgm.volume = 0;
       const t0 = performance.now();
       const fade = setInterval(() => {
-        const k = Math.min(1, (performance.now() - t0) / 1200);
+        const k = Math.min(1, (performance.now() - t0) / (FADE_S*1000));
         bgm.volume = BGM_VOL * k;
         if (k >= 1) clearInterval(fade);
       }, 50);
+    }
+  }
+  function startAudio(){
+    if (bgmStarted) return;
+    if (!bgmTimeSet){
+      const t = parseFloat(store.get('hf_bgm_t'));
+      if (t > 0 && isFinite(t)) try{ bgm.currentTime = t; }catch(_){}
+      bgmTimeSet = true;
+    }
+    bgm.play().then(() => {
+      if (bgmStarted) return;
+      bgmStarted = true;
+      sndBtn.hidden = false;
+      beginFade();
       setInterval(() => store.set('hf_bgm_t', bgm.currentTime), 1000);
-    }).catch(() => { bgmStarted = false; });
+    }).catch(() => {});
   }
   /* embebida dentro de la página de acceso (?embed=1): el audio lo maneja
      la página madre, acá queda todo en silencio y sin botón */
   const EMBED = /[?&]embed=1/.test(location.search);
   if (!EMBED){
     startAudio();                                 /* por si el autoplay está permitido */
-    addEventListener('pointerdown', startAudio);
-    addEventListener('keydown', startAudio);
+    addEventListener('pointerdown', () => { ensureGraph(); startAudio(); });
+    addEventListener('keydown', () => { ensureGraph(); startAudio(); });
   }
   sndBtn.addEventListener('click', e => {
     e.stopPropagation();
