@@ -36,11 +36,12 @@
   *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
 
   html,body{ height:100%; }
-  html{ background:var(--void); }
+  html{ background:var(--void); overflow:hidden; overscroll-behavior:none; }
   body{
     background:var(--void); color:var(--ink);
     font-family:var(--mono); font-size:14px; line-height:1.5;
     overflow:hidden;               /* sin scroll: todo entra en pantalla */
+    overscroll-behavior:none;
     height:100dvh;
   }
   html.has-cursor, html.has-cursor *{ cursor:none; }
@@ -71,8 +72,11 @@
   }
 
   /* ── escenario ── */
+  /* altura anclada al viewport VISIBLE (100dvh) y sólo al top: evita el bug
+     de Chrome mobile donde, al reabrir con la barra visible, el layout queda
+     anclado a la altura "grande" y se corta arriba sin poder scrollear */
   .stage{
-    position:fixed; inset:0; z-index:2;
+    position:fixed; top:0; left:0; right:0; height:100dvh; z-index:2;
     transform:rotate(var(--tilt, 0deg));
     transition:transform .3s cubic-bezier(.2,.8,.2,1);
   }
