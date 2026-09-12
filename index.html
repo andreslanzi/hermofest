@@ -137,6 +137,7 @@
     background-repeat:no-repeat;
     -webkit-background-clip:text; background-clip:text;
     color:transparent; -webkit-text-fill-color:transparent;
+    -webkit-text-stroke:0;               /* FEST sin contorno: igual que HERMO */
   }
   .mark:hover .mark__ch, .mark.buzz .mark__ch{ animation:jit .16s infinite steps(2); }
   @keyframes jit{ 50%{ transform:translate(var(--jx,2px), var(--jy,-2px)); } }
@@ -263,9 +264,9 @@
   .sheet__close:hover{ background:var(--pulse); border-color:var(--pulse); }
 
   .big{
-    font-family:var(--cond); font-weight:900;
-    font-size:clamp(4.7rem, 23.4vw, 7rem);
-    text-transform:uppercase; line-height:.86; letter-spacing:.02em;
+    font-family:var(--wide); font-weight:400;
+    font-size:clamp(2.5rem, 12vw, 3.5rem);
+    text-transform:uppercase; line-height:1.05; letter-spacing:.03em;
     white-space:nowrap; position:relative;
   }
   /* el texto real vive oculto hasta que las partículas terminan de armarlo */
@@ -616,7 +617,7 @@
     /* garantía: si el rAF se frena (pestaña en segundo plano) revelar igual */
     this._safety = setTimeout(() => { if (this.target && !this.done) this.reveal(); }, 2000);
   };
-  ParticleText.prototype.disperse = function(){ clearTimeout(this._safety); if (this.built){ this.done = false; this.target = 0; } };
+  ParticleText.prototype.disperse = function(){ clearTimeout(this._safety); if (this.built){ this.done = false; this.target = 0; this.el.classList.add('pt-hide'); } };
   ParticleText.prototype.step = function(t){
     if (!this.built || this.done) return;   /* ya asentado: no redibujar */
     this.prog += (this.target - this.prog) * (this.target ? 0.05 : 0.12);
@@ -651,7 +652,7 @@
   const overlay = document.getElementById('overlay');
   const sheets = [...document.querySelectorAll('.sheet')];
   const buttons = [...document.querySelectorAll('.btn')];
-  let openKey = null;
+  let openKey = null, cycleTimer = null;
 
   function ptsOf(key){
     const sheet = sheets.find(s => s.dataset.panel === key);
@@ -685,11 +686,22 @@
       fitBigs(sheet);
       ptsOf(key).forEach(o => o.assemble());
     }));
+    /* los títulos del box se desarman y se vuelven a armar cada 3s */
+    clearInterval(cycleTimer);
+    if (!reduced){
+      cycleTimer = setInterval(() => {
+        if (openKey !== key) return;
+        const ps = ptsOf(key);
+        ps.forEach(o => o.disperse());
+        setTimeout(() => { if (openKey === key) ps.forEach(o => o.assemble()); }, 750);
+      }, 3000);
+    }
     pulse(1400);
     if (!reduced){ document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),170); }
   }
   function close(){
     openKey = null;
+    clearInterval(cycleTimer); cycleTimer = null;
     overlay.classList.remove('on');
     sheets.forEach(s => s.classList.remove('on'));
     buttons.forEach(b => { b.classList.remove('is-open'); b.setAttribute('aria-expanded','false'); });
