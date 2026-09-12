@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>HERMOFEST // ACCESO</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="HERMOFEST">
+<meta property="og:title" content="⛔ ACCESO RESTRINGIDO">
+<meta property="og:description" content="Tu entrada no se regala: se gana. ¿Te animás?">
+<meta property="og:url" content="https://andreslanzi.github.io/hermofest/acceso/">
+<meta property="og:image" content="https://andreslanzi.github.io/hermofest/acceso/og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a0204">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BBH+Bartle&family=Michroma&family=Smooch+Sans:wght@700;900&family=Source+Code+Pro:wght@400;600;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0204;
+    --fg:#ff5b6a;        /* rojo fósforo principal */
+    --mid:#b2122a;       /* rojo medio (acentos, glow) */
+    --dim:#6b2c36;       /* rojo apagado (secundario) */
+    --soft:#e37482;      /* rojo suave (texto secundario) */
+    --ice:#ffdae0;       /* casi blanco rosado (énfasis) */
+    --warn:#ffb84d;      /* ámbar para errores */
+    --mono:"Source Code Pro","Consolas",monospace;
+    --disp:"BBH Bartle", Impact, "Arial Black", sans-serif;
+    --wide:"Michroma", "Arial Black", sans-serif;
+    --cond:"Smooch Sans", "Arial Narrow", sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:var(--mono);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--mid);color:#fff}
+  #rain{position:fixed;inset:0;z-index:0;opacity:.55}
+  #crt{
+    position:fixed;inset:0;z-index:3;pointer-events:none;
+    background:
+      repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%);
+  }
+  #sweep{
+    position:fixed;left:0;right:0;top:-15%;height:120px;z-index:3;pointer-events:none;
+    background:linear-gradient(180deg, transparent, rgba(255,91,106,.06), transparent);
+    animation:sweep 7s linear infinite;
+  }
+  @keyframes sweep{from{top:-15%}to{top:110%}}
+  #wrap{
+    position:relative;z-index:2;
+    height:100dvh;max-width:880px;margin:0 auto;
+    display:flex;flex-direction:column;
+    padding:14px 14px calc(14px + env(safe-area-inset-bottom));
+  }
+  #term{
+    flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    font-size:15px;line-height:1.65;
+    text-shadow:0 0 8px rgba(255,91,106,.35);
+    scrollbar-width:thin;scrollbar-color:var(--dim) transparent;
+  }
+  #term::-webkit-scrollbar{width:4px}
+  #term::-webkit-scrollbar-thumb{background:var(--dim)}
+  .line{
+    white-space:pre-wrap;word-break:break-word;min-height:1.65em;
+    animation:lineIn .22s ease-out both;
+  }
+  @keyframes lineIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+  .line .ps{color:var(--dim);margin-right:.5ch}
+  .line.dim{color:var(--dim);text-shadow:none}
+  .line.soft{color:var(--soft)}
+  .line.bright{color:var(--ice);text-shadow:0 0 12px rgba(255,218,224,.5)}
+  .line.head{
+    font-family:var(--wide);color:var(--ice);
+    font-size:12.5px;letter-spacing:.18em;padding:.35em 0;
+  }
+  .line.err{
+    color:var(--warn);text-shadow:0 0 10px rgba(255,184,77,.4);
+    animation:lineIn .22s ease-out both, shakeX .36s ease .05s;
+  }
+  @keyframes shakeX{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-2px)}}
+  .line.list{
+    font-family:var(--cond);font-weight:900;color:var(--soft);
+    font-size:clamp(22px,5vw,30px);letter-spacing:.22em;line-height:1.2;
+    padding-left:2ch;
+  }
+  .line.granted{
+    font-family:var(--disp);
+    color:var(--ice);font-size:clamp(26px,7vw,46px);
+    letter-spacing:.08em;padding:.35em 0;
+    text-shadow:0 0 18px rgba(255,91,106,.9),0 0 60px rgba(255,91,106,.5);
+    animation:pulse 1s ease-in-out infinite alternate;
+  }
+  @keyframes pulse{from{opacity:.85}to{opacity:1}}
+
+  #inform{display:flex;align-items:baseline;gap:.5ch;padding:6px 0 2px}
+  #inform[hidden]{display:none}
+  #inform .ps{color:var(--dim);animation:caretBlink 1.1s steps(1) infinite}
+  @keyframes caretBlink{50%{opacity:.25}}
+  #inp{
+    flex:1;background:transparent;border:0;outline:0;
+    color:var(--ice);font-family:var(--mono);font-size:16px;
+    caret-color:var(--fg);text-shadow:0 0 8px rgba(255,91,106,.35);
+  }
+
+  #drawPanel{margin-top:10px;flex:0 0 auto;animation:panelIn .55s cubic-bezier(.2,.8,.2,1) both}
+  #drawPanel[hidden]{display:none}
+  #drawPanel.out{opacity:0;transform:translateY(14px);transition:opacity .35s ease,transform .35s ease}
+  @keyframes panelIn{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+  .dp-head{
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:var(--wide);font-size:10px;letter-spacing:.26em;color:var(--dim);
+    padding:0 2px 6px;
+  }
+  .dp-head b{color:var(--soft);font-weight:600;transition:color .3s}
+  #padBox{
+    position:relative;border:1px solid var(--dim);
+    background:rgba(10,2,4,.72);
+    animation:breathe 3.2s ease-in-out infinite;
+  }
+  @keyframes breathe{
+    0%,100%{box-shadow:0 0 18px rgba(178,18,42,.14) inset,0 0 10px rgba(178,18,42,.12)}
+    50%{box-shadow:0 0 30px rgba(178,18,42,.28) inset,0 0 22px rgba(178,18,42,.25)}
+  }
+  #padBox::before,#padBox::after{
+    content:"";position:absolute;width:14px;height:14px;pointer-events:none;
+    border:1px solid var(--fg);transition:width .3s,height .3s;
+  }
+  #padBox::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+  #padBox::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+  #padBox:active::before,#padBox:active::after{width:22px;height:22px}
+  #pad{display:block;width:100%;height:min(320px,36dvh);touch-action:none;cursor:crosshair}
+  .dp-foot{display:flex;justify-content:flex-end;padding-top:6px}
+  #clearBtn{
+    background:transparent;border:1px solid var(--dim);color:var(--soft);
+    font-family:var(--wide);font-size:10px;letter-spacing:.22em;
+    padding:7px 16px;cursor:pointer;
+    transition:background .2s,color .2s,border-color .2s,transform .12s;
+  }
+  #clearBtn:hover{background:rgba(178,18,42,.22);border-color:var(--mid);color:var(--ice)}
+  #clearBtn:active{transform:translate(1px,1px)}
+
+  body.freeze *{animation-play-state:paused!important}
+  .glitch{animation:glitch .28s steps(2) 3}
+  @keyframes glitch{
+    0%{transform:translate(0)}
+    25%{transform:translate(-5px,2px);filter:hue-rotate(60deg)}
+    50%{transform:translate(4px,-3px)}
+    75%{transform:translate(-3px,-2px);filter:invert(1)}
+    100%{transform:translate(0)}
+  }
+  body.quake{animation:quake .5s steps(2) 2}
+  @keyframes quake{25%{transform:translate(4px,-3px)}50%{transform:translate(-5px,3px)}75%{transform:translate(3px,2px)}}
+  #flash{
+    position:fixed;inset:0;z-index:9;background:var(--ice);
+    opacity:0;pointer-events:none;transition:opacity .15s;
+  }
+  #sndBtn{
+    position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:5;
+    background:rgba(10,2,4,.6);border:1px solid var(--dim);color:var(--soft);
+    padding:8px;line-height:0;cursor:pointer;
+    transition:background .2s,color .2s,border-color .2s;
+  }
+  #sndBtn:hover{border-color:var(--mid);color:var(--ice)}
+  #sndBtn[hidden]{display:none}
+  #sndBtn .mx{display:none}
+  #sndBtn.muted .w1,#sndBtn.muted .w2{display:none}
+  #sndBtn.muted .mx{display:block}
+
+  @media (prefers-reduced-motion: reduce){
+    #sweep{animation:none;display:none}
+    #padBox{animation:none}
+    .line,.line.err{animation:none}
+    body.quake,.glitch{animation:none}
+  }
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<div id="crt"></div>
+<div id="sweep"></div>
+<div id="flash"></div>
+<audio id="bgm" src="soundtrack.mp3" loop preload="auto"></audio>
+<button type="button" id="sndBtn" hidden aria-label="Silenciar música">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/>
+    <path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/>
+    <path class="w2" d="M18.5 5.5a9 9 0 0 1 0 13"/>
+    <line class="mx" x1="16" y1="9" x2="22" y2="15"/>
+    <line class="mx" x1="22" y1="9" x2="16" y2="15"/>
+  </svg>
+</button>
+<main id="wrap">
+  <div id="term" aria-live="polite">
+    <form id="inform" hidden autocomplete="off">
+      <span class="ps">&gt;</span>
+      <input id="inp" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="send">
+      <button type="submit" hidden aria-hidden="true" tabindex="-1"></button>
+    </form>
+  </div>
+  <section id="drawPanel" hidden>
+    <div class="dp-head"><span>ZONA DE TRAZO</span><b id="dpHint">INICIAL 1/2</b></div>
+    <div id="padBox"><canvas id="pad"></canvas></div>
+    <div class="dp-foot"><button type="button" id="clearBtn">LIMPIAR</button></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+/* ================= CONFIG ================= */
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdmlS8BJiuo3GULne0droQQzlkq7ZE7Ppb64JDuxeKLVVxlBQ/formResponse";
+const FORM_FIELD = "entry.1183420728";
+const DEST_URL = "https://andreslanzi.github.io/hermofest/";
+const NAMES = [{letter:"A", word:"ANDI"},{letter:"C", word:"CHARLY"}];
+const ANSWER = "SOTANO";
+
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rnd = (a,b) => a + Math.random()*(b-a);
+
+/* ================= MATRIX RAIN (roja) ================= */
+const rain = (() => {
+  const cv = $("#rain"), cx = cv.getContext("2d");
+  const GLYPHS = "アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789HERMOFESTXZ";
+  let cols = [], fs = 16, W = 0, H = 0;
+  function resize(){
+    W = cv.width = innerWidth; H = cv.height = innerHeight;
+    const n = Math.ceil(W/fs);
+    cols = Array.from({length:n}, () => rnd(-H/fs, 0));
+  }
+  addEventListener("resize", resize); resize();
+  const api = { paused:false, speed:1 };
+  let acc = 0, last = performance.now();
+  function tick(now){
+    const dt = Math.min(now - last, 200); last = now;
+    if(!api.paused){
+      acc += dt * api.speed;
+      while(acc >= 50){
+        acc -= 50;
+        cx.fillStyle = "rgba(10,2,4,0.09)"; cx.fillRect(0,0,W,H);
+        cx.font = fs + "px monospace";
+        for(let i=0;i<cols.length;i++){
+          const ch = GLYPHS[Math.random()*GLYPHS.length|0];
+          const y = cols[i]*fs;
+          cx.fillStyle = Math.random() < .04 ? "#ffb6c4" : "#b2122a";
+          cx.fillText(ch, i*fs, y);
+          cols[i] = (y > H && Math.random() > .975) ? 0 : cols[i]+1;
+        }
+      }
+    } else { acc = 0; }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  return api;
+})();
+
+/* ================= TERMINAL ================= */
+const term = $("#term"), inform = $("#inform"), inp = $("#inp");
+function scrollTerm(){ term.scrollTop = term.scrollHeight; }
+function addLine(cls){
+  const d = document.createElement("div");
+  d.className = "line" + (cls ? " " + cls : "");
+  term.insertBefore(d, inform); scrollTerm();
+  return d;
+}
+async function T(text, opts = {}){
+  const { cls = "", cps = 380, ps = true, pause = 120 } = opts;
+  const d = addLine(cls);
+  if(ps){ const p = document.createElement("span"); p.className = "ps"; p.textContent = ">"; d.appendChild(p); }
+  const span = document.createElement("span"); d.appendChild(span);
+  if(cps >= 9000){ span.textContent = text; scrollTerm(); }
+  else{
+    const delay = 1000/cps;
+    for(const ch of text){ span.textContent += ch; scrollTerm(); await sleep(delay); }
+  }
+  if(pause) await sleep(pause);
+  return d;
+}
+async function progress(label, ok = "OK"){
+  const d = await T(label + " ", { pause:0 });
+  const span = d.lastChild;
+  for(let i=0;i<10;i++){ span.textContent += "."; scrollTerm(); await sleep(rnd(40,140)); }
+  span.textContent += " " + ok; scrollTerm();
+  await sleep(200);
+}
+function ask(){
+  return new Promise(resolve => {
+    inform.hidden = false; scrollTerm();
+    inp.value = ""; inp.focus();
+    const submit = e => {
+      e.preventDefault();
+      const v = inp.value.trim();
+      if(!v) return;
+      inform.hidden = true;
+      inform.onsubmit = null; inp.onkeydown = null;
+      const d = addLine("bright");
+      d.innerHTML = '<span class="ps">&gt;</span>';
+      d.appendChild(document.createTextNode(v));
+      resolve(v);
+    };
+    inform.onsubmit = submit;
+    inp.onkeydown = e => { if(e.key === "Enter") submit(e); };
+  });
+}
+term.addEventListener("click", () => { if(!inform.hidden) inp.focus(); });
+
+/* ================= SOUNDTRACK ================= */
+/* arranca con la primera interacción (política de autoplay); si no hay
+   soundtrack.mp3 junto a esta página, queda todo en silencio sin romper nada.
+   La posición y el mute se guardan en sessionStorage para que la invitación
+   principal retome la música donde quedó tras el redirect. */
+const bgm = $("#bgm"), sndBtn = $("#sndBtn");
+const BGM_VOL = 0.45;
+const store = { get:k => { try{ return sessionStorage.getItem(k); }catch(_){ return null; } },
+                set:(k,v) => { try{ sessionStorage.setItem(k,v); }catch(_){} } };
+let bgmStarted = false;
+bgm.muted = store.get("hf_bgm_m") === "1";
+sndBtn.classList.toggle("muted", bgm.muted);
+function startAudio(){
+  if(bgmStarted) return;
+  bgmStarted = true;
+  const t = parseFloat(store.get("hf_bgm_t"));
+  if(t > 0 && isFinite(t)) try{ bgm.currentTime = t; }catch(_){}
+  bgm.volume = 0;
+  bgm.play().then(() => {
+    sndBtn.hidden = false;
+    const t0 = performance.now();
+    const fade = setInterval(() => {
+      const k = Math.min(1, (performance.now() - t0) / 2500);
+      bgm.volume = BGM_VOL * k;
+      if(k >= 1) clearInterval(fade);
+    }, 50);
+    setInterval(() => store.set("hf_bgm_t", bgm.currentTime), 1000);
+  }).catch(() => { bgmStarted = false; });
+}
+addEventListener("pointerdown", startAudio);
+addEventListener("keydown", startAudio);
+sndBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  bgm.muted = !bgm.muted;
+  sndBtn.classList.toggle("muted", bgm.muted);
+  store.set("hf_bgm_m", bgm.muted ? "1" : "0");
+});
+
+/* ================= GOOGLE FORM ================= */
+function submitName(name){
+  try{
+    const fd = new FormData();
+    fd.append(FORM_FIELD, name);
+    fetch(FORM_URL, { method:"POST", mode:"no-cors", body:fd }).catch(()=>{});
+  }catch(e){}
+}
+
+/* ================= $P RECOGNIZER ================= */
+const PDollar = (() => {
+  const N = 32;
+  const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+  function pathLength(pts){
+    let d = 0;
+    for(let i=1;i<pts.length;i++) if(pts[i].id === pts[i-1].id) d += dist(pts[i-1], pts[i]);
+    return d;
+  }
+  function resample(points, n){
+    points = points.map(p => ({...p}));
+    const I = pathLength(points)/(n-1);
+    let D = 0; const out = [{...points[0]}];
+    for(let i=1;i<points.length;i++){
+      if(points[i].id === points[i-1].id){
+        let d = dist(points[i-1], points[i]);
+        if(D + d >= I && d > 0){
+          const t = (I-D)/d;
+          const q = { x: points[i-1].x + t*(points[i].x-points[i-1].x),
+                      y: points[i-1].y + t*(points[i].y-points[i-1].y),
+                      id: points[i].id };
+          out.push(q); points.splice(i, 0, q); D = 0;
+        } else D += d;
+      }
+    }
+    while(out.length < n) out.push({...points[points.length-1]});
+    return out.slice(0, n);
+  }
+  function normalize(points){
+    let pts = resample(points, N);
+    let minX=1/0, minY=1/0, maxX=-1/0, maxY=-1/0;
+    for(const p of pts){ minX=Math.min(minX,p.x); minY=Math.min(minY,p.y); maxX=Math.max(maxX,p.x); maxY=Math.max(maxY,p.y); }
+    const size = Math.max(maxX-minX, maxY-minY) || 1;
+    pts = pts.map(p => ({ x:(p.x-minX)/size, y:(p.y-minY)/size, id:p.id }));
+    let cx=0, cy=0;
+    for(const p of pts){ cx += p.x; cy += p.y; }
+    cx/=pts.length; cy/=pts.length;
+    return pts.map(p => ({ x:p.x-cx, y:p.y-cy, id:p.id }));
+  }
+  function cloudDist(a, b, start){
+    const n = a.length, matched = new Array(n).fill(false);
+    let sum = 0, i = start;
+    do{
+      let idx = -1, min = 1/0;
+      for(let j=0;j<n;j++) if(!matched[j]){
+        const d = dist(a[i], b[j]);
+        if(d < min){ min = d; idx = j; }
+      }
+      matched[idx] = true;
+      sum += (1 - ((i - start + n) % n)/n) * min;
+      i = (i+1) % n;
+    } while(i !== start);
+    return sum;
+  }
+  function match(a, b){
+    const step = Math.floor(Math.pow(a.length, .5));
+    let min = 1/0;
+    for(let i=0;i<a.length;i+=step)
+      min = Math.min(min, cloudDist(a,b,i), cloudDist(b,a,i));
+    return min;
+  }
+  return { normalize, match };
+})();
+
+/* templates: trazos geométricos en una caja 0..100 */
+function seg(x1,y1,x2,y2,id,k=16){
+  const pts = [];
+  for(let i=0;i<=k;i++) pts.push({ x:x1+(x2-x1)*i/k, y:y1+(y2-y1)*i/k, id });
+  return pts;
+}
+function arc(cx,cy,r,a0,a1,id,k=28){
+  const pts = [];
+  for(let i=0;i<=k;i++){
+    const a = (a0 + (a1-a0)*i/k) * Math.PI/180;
+    pts.push({ x:cx + r*Math.cos(a), y:cy - r*Math.sin(a), id });
+  }
+  return pts;
+}
+const TEMPLATES = [
+  // --- A ---
+  { letter:"A", pts:[...seg(20,90,50,10,0), ...seg(50,10,80,90,1), ...seg(32,62,68,62,2)] },
+  { letter:"A", pts:[...seg(15,92,50,8,0), ...seg(50,8,85,92,0), ...seg(30,60,70,60,1)] },
+  { letter:"A", pts:[...seg(25,90,50,15,0), ...seg(50,15,75,90,1), ...seg(35,55,65,55,2)] },
+  { letter:"A", pts:[...seg(18,90,52,10,0), ...seg(52,10,82,90,0), ...seg(70,65,30,65,1)] },
+  { letter:"A", pts:[...arc(48,58,24,40,320,0), ...seg(70,42,70,90,1)] },              // a minúscula
+  { letter:"A", pts:[...seg(15,90,50,10,0), ...seg(50,10,85,90,0), ...seg(72,58,28,58,0)] }, // A en un trazo
+  // --- C ---
+  { letter:"C", pts:arc(55,50,40,55,305,0) },
+  { letter:"C", pts:arc(55,50,42,35,325,0) },
+  { letter:"C", pts:arc(55,50,38,75,285,0) },
+  { letter:"C", pts:[...arc(58,32,22,20,180,0), ...seg(36,32,36,68,0), ...arc(58,68,22,180,340,0)] }, // C cuadrada
+  // --- distractores ---
+  { letter:"·O", pts:arc(50,50,38,90,450,0) },
+  { letter:"·|", pts:seg(50,10,50,90,0) },
+  { letter:"·-", pts:seg(10,50,90,50,0) },
+  { letter:"·/", pts:seg(20,90,80,10,0) },
+  { letter:"·L", pts:[...seg(30,10,30,88,0), ...seg(30,88,78,88,0)] },
+];
+for(const t of TEMPLATES) t.norm = PDollar.normalize(t.pts);
+
+function recognize(strokes){
+  const pts = [];
+  strokes.forEach((s, id) => s.forEach(p => pts.push({ x:p.x, y:p.y, id })));
+  if(pts.length < 6) return null;
+  const cand = PDollar.normalize(pts);
+  let best = null;
+  for(const t of TEMPLATES){
+    const d = PDollar.match(cand, t.norm);
+    if(!best || d < best.d) best = { letter:t.letter, d };
+  }
+  return best;
+}
+const ACCEPT_DIST = 1.1;   // tope permisivo, aplicado tras la pausa (calibrado)
+const STRICT_DIST = 0.45;  // aceptación inmediata al soltar si la letra es inconfundible
+
+/* ================= DRAW PAD ================= */
+const pad = $("#pad"), padCtx = pad.getContext("2d");
+const drawPanel = $("#drawPanel"), dpHint = $("#dpHint"), clearBtn = $("#clearBtn");
+let padW = 0, padH = 0, dpr = 1;
+function resizePad(){
+  const r = pad.getBoundingClientRect();
+  if(!r.width) return;
+  dpr = devicePixelRatio || 1;
+  padW = r.width; padH = r.height;
+  pad.width = Math.round(padW * dpr); pad.height = Math.round(padH * dpr);
+  padCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  redrawStrokes();
+}
+addEventListener("resize", resizePad);
+
+const drawing = { strokes: [], active: false, locked: true, onStroke: null };
+function strokeStyle(){
+  padCtx.strokeStyle = "#ff5b6a"; padCtx.lineWidth = 4;
+  padCtx.lineCap = "round"; padCtx.lineJoin = "round";
+  padCtx.shadowColor = "#b2122a"; padCtx.shadowBlur = 12;
+}
+function redrawStrokes(){
+  padCtx.clearRect(0,0,padW,padH);
+  strokeStyle();
+  for(const s of drawing.strokes){
+    padCtx.beginPath();
+    s.forEach((p,i) => i ? padCtx.lineTo(p.x,p.y) : padCtx.moveTo(p.x,p.y));
+    padCtx.stroke();
+  }
+}
+function padPoint(e){
+  const r = pad.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+pad.addEventListener("pointerdown", e => {
+  if(drawing.locked) return;
+  e.preventDefault();
+  try{ pad.setPointerCapture(e.pointerId); }catch(_){}
+  drawing.active = true;
+  drawing.strokes.push([padPoint(e)]);
+  if(drawing.onStrokeStart) drawing.onStrokeStart();
+});
+pad.addEventListener("pointermove", e => {
+  if(!drawing.active || drawing.locked) return;
+  e.preventDefault();
+  const s = drawing.strokes[drawing.strokes.length-1];
+  const p = padPoint(e), q = s[s.length-1];
+  if(Math.hypot(p.x-q.x, p.y-q.y) < 2) return;
+  s.push(p);
+  strokeStyle();
+  padCtx.beginPath(); padCtx.moveTo(q.x,q.y); padCtx.lineTo(p.x,p.y); padCtx.stroke();
+});
+function endStroke(e){
+  if(!drawing.active) return;
+  drawing.active = false;
+  const s = drawing.strokes[drawing.strokes.length-1];
+  let len = 0;
+  for(let i=1;i<s.length;i++) len += Math.hypot(s[i].x-s[i-1].x, s[i].y-s[i-1].y);
+  if(len < 14){ drawing.strokes.pop(); redrawStrokes(); return; }
+  if(drawing.onStroke) drawing.onStroke();
+}
+pad.addEventListener("pointerup", endStroke);
+pad.addEventListener("pointercancel", endStroke);
+clearBtn.addEventListener("click", () => {
+  if(drawing.locked) return;
+  drawing.strokes = []; redrawStrokes();
+  if(drawing.onClear) drawing.onClear();
+});
+
+/* ================= PARTICLES ================= */
+const WORD_FONT = fs => `${fs}px "BBH Bartle", Impact, "Arial Black", sans-serif`;
+function sampleText(word){
+  const oc = document.createElement("canvas");
+  oc.width = Math.max(1, padW|0); oc.height = Math.max(1, padH|0);
+  const c = oc.getContext("2d", { willReadFrequently:true });
+  let fs = padH * .58;
+  c.font = WORD_FONT(fs);
+  const w = c.measureText(word).width;
+  if(w > padW * .86) fs *= (padW * .86) / w;
+  c.font = WORD_FONT(fs);
+  c.textAlign = "center"; c.textBaseline = "middle";
+  c.fillStyle = "#fff"; c.fillText(word, oc.width/2, oc.height/2);
+  const img = c.getImageData(0,0,oc.width,oc.height).data;
+  let step = 3, pts;
+  do{
+    pts = [];
+    for(let y=0;y<oc.height;y+=step)
+      for(let x=0;x<oc.width;x+=step)
+        if(img[(y*oc.width+x)*4+3] > 128) pts.push({x,y});
+    step++;
+  } while(pts.length > 1300);
+  return { pts, fs };
+}
+function morphToWord(word){
+  return new Promise(resolve => {
+    const src = [];
+    for(const s of drawing.strokes)
+      for(let i=0;i<s.length;i++){
+        src.push(s[i]);
+        if(i){ // densificar
+          src.push({ x:(s[i].x+s[i-1].x)/2, y:(s[i].y+s[i-1].y)/2 });
+        }
+      }
+    const { pts:targets, fs } = sampleText(word);
+    const t0 = performance.now();
+    const parts = targets.map((t,i) => {
+      const o = src[(Math.random()*src.length)|0] || { x:padW/2, y:padH/2 };
+      return {
+        x0: o.x + rnd(-6,6), y0: o.y + rnd(-6,6),
+        tx: t.x, ty: t.y,
+        delay: rnd(0,380), dur: rnd(750,1350),
+        amp: rnd(-46,46),
+        bright: Math.random() < .3
+      };
+    });
+    const total = 380 + 1350;
+    function frame(now){
+      const el = now - t0;
+      padCtx.save();
+      padCtx.setTransform(dpr,0,0,dpr,0,0);
+      padCtx.shadowBlur = 0;
+      padCtx.fillStyle = "rgba(10,2,4,0.28)";
+      padCtx.fillRect(0,0,padW,padH);
+      for(const p of parts){
+        let k = (el - p.delay) / p.dur;
+        k = k < 0 ? 0 : k > 1 ? 1 : k;
+        const e = 1 - Math.pow(1-k, 3);
+        const dx = p.tx - p.x0, dy = p.ty - p.y0;
+        const d = Math.hypot(dx,dy) || 1;
+        const wob = Math.sin(k * Math.PI) * p.amp;
+        const x = p.x0 + dx*e + (-dy/d)*wob;
+        const y = p.y0 + dy*e + ( dx/d)*wob;
+        padCtx.fillStyle = p.bright ? "#ffdae0" : "#ff5b6a";
+        padCtx.fillRect(x, y, 2.2, 2.2);
+      }
+      padCtx.restore();
+      if(el < total) requestAnimationFrame(frame);
+      else{
+        padCtx.clearRect(0,0,padW,padH);
+        padCtx.font = WORD_FONT(fs);
+        padCtx.textAlign = "center"; padCtx.textBaseline = "middle";
+        padCtx.shadowColor = "#b2122a"; padCtx.shadowBlur = 22;
+        padCtx.fillStyle = "#ff5b6a";
+        padCtx.fillText(word, padW/2, padH/2);
+        padCtx.shadowBlur = 0;
+        setTimeout(() => {
+          const f0 = performance.now(), FADE = 450;
+          (function fade(){
+            const op = 1 - (performance.now() - f0)/FADE;
+            padCtx.clearRect(0,0,padW,padH);
+            if(op > 0){
+              padCtx.globalAlpha = op;
+              padCtx.font = WORD_FONT(fs);
+              padCtx.textAlign = "center"; padCtx.textBaseline = "middle";
+              padCtx.fillStyle = "#ff5b6a"; padCtx.fillText(word, padW/2, padH/2);
+              padCtx.globalAlpha = 1;
+              requestAnimationFrame(fade);
+            } else resolve();
+          })();
+        }, 1400);
+      }
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+/* ================= CHALLENGE ================= */
+/* acepta cualquiera de los candidatos que queden y resuelve con el elegido */
+function challenge(candidates, idx){
+  return new Promise(resolve => {
+    let fails = 0, evalTimer = null;
+    drawing.strokes = []; redrawStrokes();
+    drawing.locked = false;
+    dpHint.textContent = `INICIAL ${idx}/2`;
+
+    async function accept(host){
+      drawing.locked = true;
+      clearTimeout(evalTimer);
+      drawing.onStroke = drawing.onStrokeStart = drawing.onClear = null;
+      /* -- freeze 2s (la música sigue) -- */
+      document.body.classList.add("freeze");
+      rain.paused = true;
+      await sleep(2000);
+      document.body.classList.remove("freeze");
+      rain.paused = false;
+      /* -- reacción -- */
+      $("#padBox").classList.add("glitch");
+      await sleep(560);
+      $("#padBox").classList.remove("glitch");
+      await morphToWord(host.word);
+      drawing.strokes = [];
+      await T(`PATRÓN RECONOCIDO → ${host.word}`, { cls:"bright" });
+      resolve(host);
+    }
+    async function reject(){
+      drawing.locked = true;
+      await T("SEÑAL NO RECONOCIDA. Limpiando buffer...", { cls:"err", cps:9999 });
+      fails++;
+      if(fails === 2){
+        const letras = candidates.map(h => `«${h.letter}»`).join(" o una ");
+        await T(`PISTA: estás buscando una ${letras}.`, { cls:"dim" });
+      }
+      await sleep(350);
+      drawing.strokes = []; redrawStrokes();
+      drawing.locked = false;
+    }
+    function evaluate(final){
+      const r = recognize(drawing.strokes);
+      const cap = final ? ACCEPT_DIST : STRICT_DIST;
+      if(r && r.d < cap){
+        const host = candidates.find(h => h.letter === r.letter);
+        if(host){ accept(host); return; }
+      }
+      if(final) reject();
+    }
+    drawing.onStrokeStart = () => clearTimeout(evalTimer);
+    drawing.onClear = () => clearTimeout(evalTimer);
+    drawing.onStroke = () => {
+      clearTimeout(evalTimer);
+      evaluate(false);
+      if(!drawing.locked) evalTimer = setTimeout(() => evaluate(true), 2000);
+    };
+  });
+}
+
+/* hook de debug (inofensivo en producción) */
+window.__rec = { recognize, TEMPLATES, drawing };
+
+/* ================= RIDDLE ================= */
+const clean = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-ZÑ]/g,"");
+async function riddle(){
+  await T("");
+  await T("» PRUEBA 2 DE 2 — LA PALABRA ESCONDIDA", { cls:"head" });
+  await sleep(300);
+  await T("Hay una palabra escondida acá.", { cls:"soft" });
+  await T("");
+  for(const w of ["SUBWOOFER","OSCURIDAD","TECHNO","ABAJO","NOCHE","OCULTO"])
+    await T(w, { cls:"list", ps:false, cps:60, pause:60 });
+  await T("");
+  await T("No está en el significado.", { cls:"soft" });
+  await T("No está en el final.", { cls:"soft" });
+  await T("Está justo donde cada palabra comienza.", { cls:"soft" });
+  await T("INGRESÁ LA PALABRA:", { cls:"bright" });
+  let tries = 0;
+  for(;;){
+    const v = clean(await ask());
+    if(v === ANSWER || v === "EL" + ANSWER) return;
+    tries++;
+    if(tries === 1) await T("ACCESO DENEGADO. Eso no abre ninguna puerta.", { cls:"err" });
+    else if(tries === 2) await T("ACCESO DENEGADO. Mirá de nuevo la lista.", { cls:"err" });
+    else if(tries === 3) await T("PISTA: quedate con la primera letra de cada palabra.", { cls:"dim" });
+    else if(tries >= 5) await T("PISTA: leelas en orden, de arriba hacia abajo.", { cls:"dim" });
+    else await T("ACCESO DENEGADO.", { cls:"err" });
+    await T("Probá de nuevo:", { cls:"soft" });
+  }
+}
+
+/* ================= MAIN ================= */
+async function main(){
+  /* precargar las display fonts para el canvas y los títulos */
+  if(document.fonts && document.fonts.load){
+    ["100px 'BBH Bartle'","900 40px 'Smooch Sans'","20px 'Michroma'"]
+      .forEach(f => document.fonts.load(f).catch(()=>{}));
+  }
+  await sleep(500);
+  await T("INICIANDO HERMOFEST://ACCESO v2.0.26", { cls:"dim", cps:9999 });
+  await progress("ESTABLECIENDO CONEXIÓN SEGURA");
+  await sleep(500);
+  await T("Despertá.", { cls:"bright", cps:12, pause:700 });
+  await T("Elegiste la pastilla roja. No hay vuelta atrás.", { cps:24, pause:400 });
+  await T("Nadie puede decirte qué es HERMOFEST. Tenés que verlo por vos mismo.", { cps:24, pause:400 });
+  await T("Primero, identificate.", { cls:"soft", pause:300 });
+  await T("Ingresá tu NOMBRE COMPLETO:", { cls:"bright" });
+
+  let name;
+  for(;;){
+    name = (await ask()).replace(/\s+/g," ").trim();
+    if(name.split(" ").length >= 2 && name.length >= 5) break;
+    await T("El sistema necesita nombre Y apellido. De nuevo:", { cls:"err" });
+  }
+  submitName(name);
+  const first = name.split(" ")[0];
+  const firstCap = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+  await progress("VERIFICANDO IDENTIDAD");
+  await progress("TRANSMITIENDO REGISTRO AL MAINFRAME");
+  await T(`Bienvenido/a al programa, ${firstCap}.`, { cls:"bright", pause:400 });
+  await T("Tu entrada no se regala: se gana.", { cps:24, pause:500 });
+  await T("");
+  await T("» PRUEBA 1 DE 2 — LOS ANFITRIONES", { cls:"head" });
+  await T("Dos anfitriones custodian la salida.", { cps:24 });
+  await T("Dibujá la INICIAL de cualquiera de los dos en la ZONA DE TRAZO.", { cls:"bright" });
+  await T("(con el dedo o el mouse)", { cls:"dim", cps:9999 });
+
+  drawPanel.hidden = false;
+  resizePad();
+  scrollTerm();
+
+  const firstHost = await challenge(NAMES, 1);
+  await T("Ahora la inicial del otro anfitrión.", { cls:"bright" });
+  await challenge(NAMES.filter(h => h !== firstHost), 2);
+  await T("ANFITRIONES CONFIRMADOS.", { cls:"soft" });
+  await sleep(400);
+  drawPanel.classList.add("out");
+  await sleep(380);
+  drawPanel.hidden = true;
+  drawPanel.classList.remove("out");
+
+  await riddle();
+
+  /* acceso concedido */
+  await T("");
+  addLine("granted").textContent = "ACCESO CONCEDIDO";
+  scrollTerm();
+  document.body.classList.add("quake");
+  setTimeout(() => document.body.classList.remove("quake"), 1100);
+  await sleep(900);
+  await T("La puerta está abajo.", { cls:"bright", cps:20 });
+  await T("SIGUIENDO AL CONEJO BLANCO...", { cls:"soft" });
+  rain.speed = 9;
+  await sleep(1600);
+  $("#flash").style.opacity = ".9";
+  await sleep(320);
+  store.set("hf_bgm_t", bgm.currentTime);
+  location.replace(DEST_URL);
+}
+main();
+</script>
+</body>
+</html>

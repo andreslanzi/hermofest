@@ -1,5 +1,16 @@
 <meta charset="utf-8">
 <title>HERMOFEST</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="HERMOFEST">
+<meta property="og:title" content="HERMOFEST">
+<meta property="og:description" content="Desde el sótano.">
+<meta property="og:url" content="https://andreslanzi.github.io/hermofest/">
+<meta property="og:image" content="https://andreslanzi.github.io/hermofest/acceso/og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#080204">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BBH+Bartle&family=Michroma&family=Smooch+Sans:wght@700;900&family=Source+Code+Pro:wght@400;600&display=swap">
 <style>
   /* ── HERMOFEST — una sola pantalla, sin scroll ───────────────────────
@@ -8,12 +19,12 @@
      Single-theme a propósito: acá abajo no existe el modo claro.
      Negro crudo, blanco duro, un azul eléctrico. */
   :root{
-    --void:  #020805;              /* negro con tinte verde */
-    --ink:   #74e39a;              /* verde fósforo (texto) */
-    --dim:   #2c6b44;              /* verde oscuro (secundario) */
-    --pulse: #12b24a;              /* verde matrix (acento) */
-    --pulse-hi:#4dff86;            /* verde brillante (glow) */
-    --line:  rgba(60,200,110,.18);
+    --void:  #080204;              /* negro con tinte rojo */
+    --ink:   #e37482;              /* rojo fósforo (texto) */
+    --dim:   #6b2c36;              /* rojo oscuro (secundario) */
+    --pulse: #b2122a;              /* rojo profundo (acento) */
+    --pulse-hi:#ff4d5e;            /* rojo brillante (glow) */
+    --line:  rgba(200,60,88,.18);
     --mono:  "Source Code Pro", ui-monospace, Consolas, monospace;
     --disp:  "BBH Bartle", Impact, "Arial Black", sans-serif;
     --wide:  "Michroma", "Arial Black", sans-serif;
@@ -129,7 +140,7 @@
     animation:glitchA 3.1s infinite steps(1);
   }
   .mark__line::after{
-    color:#d6ffe4; -webkit-text-stroke:0; mix-blend-mode:screen; opacity:.6;
+    color:#ffd6e0; -webkit-text-stroke:0; mix-blend-mode:screen; opacity:.6;
     clip-path:inset(50% 0 50% 0); transform:translateX(7px);
     animation:glitchB 2.6s .4s infinite steps(1);
   }
@@ -283,8 +294,8 @@
   /* ── mira / cursor (solo puntero fino) ── */
   .xhair{ position:fixed; inset:0; z-index:20; pointer-events:none; display:none; }
   html.has-cursor .xhair{ display:block; }
-  .xhair__v{ position:fixed; top:0; bottom:0; width:1px; background:rgba(70,220,120,.16); }
-  .xhair__h{ position:fixed; left:0; right:0; height:1px; background:rgba(70,220,120,.16); }
+  .xhair__v{ position:fixed; top:0; bottom:0; width:1px; background:rgba(220,70,100,.16); }
+  .xhair__h{ position:fixed; left:0; right:0; height:1px; background:rgba(220,70,100,.16); }
   .xhair__dot{
     position:fixed; width:9px; height:9px; margin:-4.5px 0 0 -4.5px;
     border:2px solid var(--pulse-hi); background:transparent; transition:transform .15s, background .15s;
@@ -299,6 +310,19 @@
     .btn--hrs{  bottom:22%; right:10%; }
     .sheet{ width:440px; }
   }
+
+  /* ── botón de sonido ── */
+  #sndBtn{
+    position:fixed; top:calc(1rem + env(safe-area-inset-top)); right:1rem; z-index:30;
+    background:rgba(8,2,4,.6); border:1px solid var(--dim); color:var(--ink);
+    padding:9px; line-height:0; cursor:pointer;
+    transition:background .2s, color .2s, border-color .2s;
+  }
+  #sndBtn:hover{ border-color:var(--pulse); color:var(--pulse-hi); }
+  #sndBtn[hidden]{ display:none; }
+  #sndBtn .mx{ display:none; }
+  #sndBtn.muted .w1, #sndBtn.muted .w2{ display:none; }
+  #sndBtn.muted .mx{ display:block; }
 
   /* ── movimiento reducido: quieto ── */
   @media (prefers-reduced-motion: reduce){
@@ -374,6 +398,17 @@
   <div class="xhair__dot"></div>
 </div>
 
+<audio id="bgm" src="acceso/soundtrack.mp3" loop preload="auto"></audio>
+<button type="button" id="sndBtn" hidden aria-label="Silenciar música">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/>
+    <path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/>
+    <path class="w2" d="M18.5 5.5a9 9 0 0 1 0 13"/>
+    <line class="mx" x1="16" y1="9" x2="22" y2="15"/>
+    <line class="mx" x1="22" y1="9" x2="16" y2="15"/>
+  </svg>
+</button>
+
 <script>
 (() => {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -391,7 +426,7 @@
     canvas.width = W * DPR; canvas.height = H * DPR;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     CX = W / 2; CY = H / 2;
-    ctx.fillStyle = '#020805'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#080204'; ctx.fillRect(0, 0, W, H);
     setupRain();
   }
   resize();
@@ -412,8 +447,8 @@
 
   function field(){
     rainSpeed += (rainTarget - rainSpeed) * 0.06;
-    /* estela: velo verde-negro que desvanece los caracteres anteriores */
-    ctx.fillStyle = reduced ? '#020805' : 'rgba(2,8,5,0.09)';
+    /* estela: velo rojo-negro que desvanece los caracteres anteriores */
+    ctx.fillStyle = reduced ? '#080204' : 'rgba(8,2,4,0.09)';
     ctx.fillRect(0, 0, W, H);
     ctx.font = `${fontSize}px "Source Code Pro", ui-monospace, monospace`;
     ctx.textAlign = 'center';
@@ -422,27 +457,27 @@
       const y = drops[i] * fontSize;
       if (y > 0){
         /* cabeza brillante (a veces casi blanca) */
-        ctx.fillStyle = Math.random() < 0.06 ? '#daffe6' : '#5bff8a';
+        ctx.fillStyle = Math.random() < 0.06 ? '#ffdae0' : '#ff5b6a';
         ctx.fillText(GLYPHS[(Math.random()*GLYPHS.length)|0], x, y);
-        /* un carácter de estela en verde medio */
-        ctx.fillStyle = 'rgba(28,150,70,0.5)';
+        /* un carácter de estela en rojo medio */
+        ctx.fillStyle = 'rgba(150,28,52,0.5)';
         ctx.fillText(GLYPHS[(Math.random()*GLYPHS.length)|0], x, y - fontSize);
       }
       drops[i] += colSpd[i] * rainSpeed;
       if (y > H && Math.random() > 0.972) drops[i] = Math.random() * -18;
     }
-    /* ondas verdes al tocar */
+    /* ondas rojas al tocar */
     for (let i = rings.length - 1; i >= 0; i--){
       const k = rings[i]; k.r += 11; k.a *= 0.92;
       if (k.a < 0.02){ rings.splice(i, 1); continue; }
-      ctx.strokeStyle = `rgba(77,255,134,${k.a.toFixed(3)})`; ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(255,77,110,${k.a.toFixed(3)})`; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(k.x, k.y, k.r, 0, Math.PI * 2); ctx.stroke();
     }
     requestAnimationFrame(field);
   }
   requestAnimationFrame(field);
 
-  /* tap en el vacío: onda verde + sacudida */
+  /* tap en el vacío: onda roja + sacudida */
   addEventListener('click', e => {
     if (e.target.closest('a, button, .sheet')) return;
     rings.push({ x:e.clientX, y:e.clientY, r:6, a:0.9 });
@@ -554,7 +589,7 @@
         x=dx+(p.tx-dx)*e+curve*0.5; y=dy+(p.ty-dy)*e+curve;
       }
       c2.globalAlpha=(0.1+0.9*e)*(p.blue?0.85:1);
-      c2.fillStyle=p.blue?'#daffe6':'#5bff8a';
+      c2.fillStyle=p.blue?'#ffdae0':'#ff5b6a';
       c2.fillRect(x,y,p.sz,p.sz);
     }
     c2.globalAlpha=1;
@@ -597,6 +632,44 @@
   document.querySelectorAll('.sheet__close').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); close(); }));
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   addEventListener('keydown', e => { if (e.key === 'Escape' && openKey) close(); });
+
+  /* ── soundtrack: retoma donde quedó la página de acceso ─────────────
+     Se intenta autoplay al cargar; si el navegador lo bloquea, arranca
+     con la primera interacción. Sin acceso/soundtrack.mp3, silencio. */
+  const bgm = document.getElementById('bgm');
+  const sndBtn = document.getElementById('sndBtn');
+  const BGM_VOL = 0.45;
+  const store = { get:k => { try{ return sessionStorage.getItem(k); }catch(_){ return null; } },
+                  set:(k,v) => { try{ sessionStorage.setItem(k,v); }catch(_){} } };
+  let bgmStarted = false;
+  bgm.muted = store.get('hf_bgm_m') === '1';
+  sndBtn.classList.toggle('muted', bgm.muted);
+  function startAudio(){
+    if (bgmStarted) return;
+    bgmStarted = true;
+    const t = parseFloat(store.get('hf_bgm_t'));
+    if (t > 0 && isFinite(t)) try{ bgm.currentTime = t; }catch(_){}
+    bgm.volume = 0;
+    bgm.play().then(() => {
+      sndBtn.hidden = false;
+      const t0 = performance.now();
+      const fade = setInterval(() => {
+        const k = Math.min(1, (performance.now() - t0) / 1200);
+        bgm.volume = BGM_VOL * k;
+        if (k >= 1) clearInterval(fade);
+      }, 50);
+      setInterval(() => store.set('hf_bgm_t', bgm.currentTime), 1000);
+    }).catch(() => { bgmStarted = false; });
+  }
+  startAudio();                                   /* por si el autoplay está permitido */
+  addEventListener('pointerdown', startAudio);
+  addEventListener('keydown', startAudio);
+  sndBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    bgm.muted = !bgm.muted;
+    sndBtn.classList.toggle('muted', bgm.muted);
+    store.set('hf_bgm_m', bgm.muted ? '1' : '0');
+  });
 
   /* ── mira / cursor (solo mouse) ── */
   if (finePointer){
