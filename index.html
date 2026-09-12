@@ -1,4 +1,5 @@
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>HERMOFEST</title>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="HERMOFEST">
@@ -332,13 +333,12 @@
     .sheet{ width:572px; }
   }
 
-  /* ── mobile: botones de navegación +50% (no el de compartir) ── */
+  /* ── mobile: botones legibles que entran de a dos por fila sin solaparse ── */
   @media (max-width:620px){
-    .btn:not(.btn--share){
-      font-size:clamp(2.1rem, 10.5vw, 2.6rem);
-      box-shadow:8px 8px 0 rgba(242,242,247,.3);
-    }
-    .btn:not(.btn--share):hover, .btn.is-open{ box-shadow:7px 7px 0 var(--pulse); }
+    :root{ --pad-x:.7rem; }
+    .btn:not(.btn--share){ font-size:clamp(1rem, 4.3vw, 1.3rem); padding:.8em .8em; letter-spacing:.03em; gap:.3em; }
+    .btn--act, .btn--loc{ top:13%; }
+    .btn--date, .btn--hrs{ bottom:13%; }
   }
 
   /* ── botón de sonido ── */
@@ -615,18 +615,29 @@
   ParticleText.prototype.reveal = function(){
     this.done = true;
     this.el.classList.remove('pt-hide');
-    if (this.c2) this.c2.clearRect(0,0,this.W2*DPR,this.H2*DPR);
+    /* crossfade: el texto sólido ya está visible; desvanecemos las partículas
+       encima para que no se note ninguna diferencia de tamaño/posición */
+    const cv = this.canvas, c2 = this.c2;
+    if (cv){
+      cv.style.transition = 'opacity .2s ease';
+      cv.style.opacity = '0';
+      clearTimeout(this._fade);
+      this._fade = setTimeout(() => {
+        if (this.done){ c2.clearRect(0,0,this.W2*DPR,this.H2*DPR); }
+      }, 220);
+    }
   };
   ParticleText.prototype.assemble = function(){
-    clearTimeout(this._safety);
+    clearTimeout(this._safety); clearTimeout(this._fade);
     if (reduced){ this.reveal(); return; }
     if (!this.built && !this.build()){ this.el.classList.remove('pt-hide'); return; }
+    if (this.canvas){ this.canvas.style.transition=''; this.canvas.style.opacity='1'; }
     this.done = false; this.prog = 0; this.target = 1;
     this.el.classList.add('pt-hide');
     /* garantía: si el rAF se frena (pestaña en segundo plano) revelar igual */
     this._safety = setTimeout(() => { if (this.target && !this.done) this.reveal(); }, 2000);
   };
-  ParticleText.prototype.disperse = function(){ clearTimeout(this._safety); if (this.built){ this.done = false; this.target = 0; this.el.classList.add('pt-hide'); } };
+  ParticleText.prototype.disperse = function(){ clearTimeout(this._safety); clearTimeout(this._fade); if (this.built){ if (this.canvas){ this.canvas.style.transition=''; this.canvas.style.opacity='1'; } this.done = false; this.target = 0; this.el.classList.add('pt-hide'); } };
   ParticleText.prototype.step = function(t){
     if (!this.built || this.done) return;   /* ya asentado: no redibujar */
     this.prog += (this.target - this.prog) * (this.target ? 0.05 : 0.12);
@@ -683,6 +694,7 @@
     });
   }
   function open(key){
+    if (!sheets.some(s => s.dataset.panel === key)) return;   /* ignora claves sin panel (ej. Compartir) */
     if (openKey === key){ close(); return; }
     openKey = key;
     overlay.classList.add('on');
@@ -717,7 +729,7 @@
     texts.forEach(o => o.disperse());
   }
 
-  buttons.forEach(b => b.addEventListener('click', e => { e.stopPropagation(); open(b.dataset.node); }));
+  buttons.forEach(b => { if (b.dataset.node) b.addEventListener('click', e => { e.stopPropagation(); open(b.dataset.node); }); });
   document.querySelectorAll('.sheet__close').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); close(); }));
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   addEventListener('keydown', e => { if (e.key === 'Escape' && openKey) close(); });
