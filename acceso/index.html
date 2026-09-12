@@ -83,7 +83,7 @@
   @keyframes lineIn{from{transform:translateY(5px)}to{transform:none}}
   .line .ps{color:var(--dim);margin-right:.5ch}
   .line.dim{color:var(--dim);text-shadow:none;font-size:.86em;--o:.3}
-  .line.soft{color:var(--soft)}
+  .line.soft{color:var(--soft);--o:.7}   /* pistas: piso alto, se siguen leyendo */
   .line.you{color:var(--fg);--o:.55}
   /* instrucción / prompt: lo que hay que hacer ahora, con barra lateral */
   .line.bright{
@@ -104,10 +104,13 @@
   .line b{font-weight:900;color:var(--ice);letter-spacing:.08em;text-shadow:0 0 14px rgba(255,218,224,.75)}
   .line.now{--o:1}
   @keyframes shakeX{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-2px)}}
+  /* palabras del 2.º puzzle: son el material del acertijo y se releen;
+     siempre brillantes y sin apagarse con el historial */
   .line.list{
-    font-family:var(--cond);font-weight:900;color:var(--soft);
-    font-size:clamp(22px,5vw,30px);letter-spacing:.22em;line-height:1.2;
-    padding-left:2ch;
+    font-family:var(--cond);font-weight:900;color:var(--ice);
+    font-size:clamp(24px,5.4vw,32px);letter-spacing:.22em;line-height:1.25;
+    padding-left:2ch;--o:1;
+    text-shadow:0 0 10px rgba(255,218,224,.45),0 0 26px rgba(255,91,106,.35);
   }
   .line.granted{
     font-family:var(--disp);
