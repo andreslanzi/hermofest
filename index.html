@@ -332,6 +332,15 @@
     .sheet{ width:572px; }
   }
 
+  /* ── mobile: botones de navegación +50% (no el de compartir) ── */
+  @media (max-width:620px){
+    .btn:not(.btn--share){
+      font-size:clamp(2.1rem, 10.5vw, 2.6rem);
+      box-shadow:8px 8px 0 rgba(242,242,247,.3);
+    }
+    .btn:not(.btn--share):hover, .btn.is-open{ box-shadow:7px 7px 0 var(--pulse); }
+  }
+
   /* ── botón de sonido ── */
   #sndBtn{
     position:fixed; top:calc(1rem + env(safe-area-inset-top)); right:1rem; z-index:30;

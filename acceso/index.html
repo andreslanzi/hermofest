@@ -117,10 +117,23 @@
   #inform .ps{color:var(--dim);animation:caretBlink 1.1s steps(1) infinite}
   @keyframes caretBlink{50%{opacity:.25}}
   #inp{
-    flex:1;background:transparent;border:0;outline:0;
+    flex:1;min-width:0;background:transparent;border:0;outline:0;
     color:var(--ice);font-family:var(--mono);font-size:16px;
     caret-color:var(--fg);text-shadow:0 0 8px rgba(255,91,106,.35);
   }
+
+  /* botón SKIP: saltea el juego y va directo a la invitación */
+  #skipBtn{
+    position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:6;
+    display:flex;align-items:center;gap:.5em;
+    background:rgba(10,2,4,.6);border:1px solid var(--dim);color:var(--soft);
+    font-family:var(--wide);font-size:10px;letter-spacing:.22em;
+    padding:10px 14px;cursor:pointer;
+    transition:background .2s,color .2s,border-color .2s,transform .12s;
+  }
+  #skipBtn:hover{border-color:var(--mid);color:var(--ice)}
+  #skipBtn:active{transform:translate(1px,1px)}
+  #skipBtn[hidden]{display:none}
 
   #drawPanel{margin-top:10px;flex:0 0 auto;animation:panelIn .55s cubic-bezier(.2,.8,.2,1) both}
   #drawPanel[hidden]{display:none}
@@ -208,6 +221,7 @@
 <div id="sweep"></div>
 <div id="flash"></div>
 <audio id="bgm" src="soundtrack.mp3" loop preload="auto"></audio>
+<button type="button" id="skipBtn" hidden aria-label="Saltear el juego e ir a la invitación">SKIP <span aria-hidden="true">&#9656;&#9656;</span></button>
 <button type="button" id="sndBtn" hidden aria-label="Silenciar música">
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/>
@@ -422,6 +436,13 @@ sndBtn.addEventListener("click", e => {
   bgm.muted = !bgm.muted;
   sndBtn.classList.toggle("muted", bgm.muted);
   store.set("hf_bgm_m", bgm.muted ? "1" : "0");
+});
+
+/* SKIP: saltea el puzzle y va directo a la invitación */
+$("#skipBtn").addEventListener("click", e => {
+  e.stopPropagation();
+  store.set("hf_bgm_t", (bgmStarted ? bgm.currentTime : 0));
+  location.href = DEST_URL;
 });
 
 /* ================= GOOGLE FORM ================= */
@@ -858,6 +879,7 @@ async function main(){
     await T("El sistema necesita nombre Y apellido. De nuevo:", { cls:"err" });
   }
   submitName(name);
+  $("#skipBtn").hidden = false;   /* SKIP disponible recién con el nombre ya enviado */
   const first = name.split(" ")[0];
   const firstCap = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   await progress("VERIFICANDO IDENTIDAD");
