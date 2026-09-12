@@ -49,13 +49,16 @@
     background:
       repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px),
       radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%);
+    transform:translateZ(0);   /* capa propia: se rasteriza una sola vez */
   }
   #sweep{
-    position:fixed;left:0;right:0;top:-15%;height:120px;z-index:3;pointer-events:none;
+    position:fixed;left:0;right:0;top:0;height:120px;z-index:3;pointer-events:none;
     background:linear-gradient(180deg, transparent, rgba(255,91,106,.06), transparent);
+    will-change:transform;transform:translateY(-120px);
     animation:sweep 7s linear infinite;
   }
-  @keyframes sweep{from{top:-15%}to{top:110%}}
+  /* transform en vez de top: composited por GPU, no repinta cada frame */
+  @keyframes sweep{from{transform:translateY(-120px)}to{transform:translateY(115vh)}}
   #wrap{
     position:relative;z-index:2;
     height:100dvh;max-width:880px;margin:0 auto;
@@ -67,6 +70,7 @@
     font-size:15px;line-height:1.65;
     text-shadow:0 0 8px rgba(255,91,106,.35);
     scrollbar-width:thin;scrollbar-color:var(--dim) transparent;
+    transform:translateZ(0);   /* aísla la terminal: la lluvia detrás no la repinta */
   }
   #term::-webkit-scrollbar{width:4px}
   #term::-webkit-scrollbar-thumb{background:var(--dim)}
@@ -128,14 +132,14 @@
     color:var(--ice);font-family:var(--wide);font-size:11px;letter-spacing:.18em;
     padding:10px 16px;cursor:pointer;white-space:nowrap;
     text-shadow:0 0 8px rgba(255,91,106,.4);
-    animation:breathe 3.2s ease-in-out infinite;
+    box-shadow:0 0 14px rgba(178,18,42,.25);
     transition:background .2s,border-color .2s,transform .12s;
   }
   #sendBtn:hover{background:rgba(178,18,42,.35);border-color:var(--fg)}
   #sendBtn:active{transform:translate(1px,1px)}
   /* CONFIRMAR aparece recién cuando el usuario toca el campo para escribir */
   #sendBtn{display:none}
-  #inform.armed #sendBtn{display:block;animation:lineIn .2s ease-out both,breathe 3.2s ease-in-out .2s infinite}
+  #inform.armed #sendBtn{display:block;animation:lineIn .2s ease-out both}
   #inform .ps{color:var(--dim);animation:caretBlink 1.1s steps(1) infinite}
   @keyframes caretBlink{50%{opacity:.25}}
   #inp{
@@ -174,11 +178,8 @@
   #padBox{
     position:relative;border:1px solid var(--dim);
     background:rgba(10,2,4,.72);
-    animation:breathe 3.2s ease-in-out infinite;
-  }
-  @keyframes breathe{
-    0%,100%{box-shadow:0 0 18px rgba(178,18,42,.14) inset,0 0 10px rgba(178,18,42,.12)}
-    50%{box-shadow:0 0 30px rgba(178,18,42,.28) inset,0 0 22px rgba(178,18,42,.25)}
+    /* glow estático (antes 'breathe' animaba box-shadow → repintaba cada frame) */
+    box-shadow:0 0 24px rgba(178,18,42,.20) inset,0 0 16px rgba(178,18,42,.18);
   }
   #padBox::before,#padBox::after{
     content:"";position:absolute;width:14px;height:14px;pointer-events:none;
