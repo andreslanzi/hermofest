@@ -8,12 +8,12 @@
      Single-theme a propósito: acá abajo no existe el modo claro.
      Negro crudo, blanco duro, un azul eléctrico. */
   :root{
-    --void:  #030308;
-    --ink:   #f2f2f7;
-    --dim:   #70768f;
-    --pulse: #2e45ff;
-    --pulse-hi:#7d8dff;
-    --line:  rgba(242,242,247,.22);
+    --void:  #020805;              /* negro con tinte verde */
+    --ink:   #74e39a;              /* verde fósforo (texto) */
+    --dim:   #2c6b44;              /* verde oscuro (secundario) */
+    --pulse: #12b24a;              /* verde matrix (acento) */
+    --pulse-hi:#4dff86;            /* verde brillante (glow) */
+    --line:  rgba(60,200,110,.18);
     --mono:  "Source Code Pro", ui-monospace, Consolas, monospace;
     --disp:  "BBH Bartle", Impact, "Arial Black", sans-serif;
     --wide:  "Michroma", "Arial Black", sans-serif;
@@ -129,7 +129,7 @@
     animation:glitchA 3.1s infinite steps(1);
   }
   .mark__line::after{
-    color:#fff; -webkit-text-stroke:0; mix-blend-mode:screen; opacity:.65;
+    color:#d6ffe4; -webkit-text-stroke:0; mix-blend-mode:screen; opacity:.6;
     clip-path:inset(50% 0 50% 0); transform:translateX(7px);
     animation:glitchB 2.6s .4s infinite steps(1);
   }
@@ -283,17 +283,13 @@
   /* ── mira / cursor (solo puntero fino) ── */
   .xhair{ position:fixed; inset:0; z-index:20; pointer-events:none; display:none; }
   html.has-cursor .xhair{ display:block; }
-  .xhair__v{ position:fixed; top:0; bottom:0; width:1px; background:rgba(242,242,247,.16); }
-  .xhair__h{ position:fixed; left:0; right:0; height:1px; background:rgba(242,242,247,.16); }
+  .xhair__v{ position:fixed; top:0; bottom:0; width:1px; background:rgba(70,220,120,.16); }
+  .xhair__h{ position:fixed; left:0; right:0; height:1px; background:rgba(70,220,120,.16); }
   .xhair__dot{
     position:fixed; width:9px; height:9px; margin:-4.5px 0 0 -4.5px;
     border:2px solid var(--pulse-hi); background:transparent; transition:transform .15s, background .15s;
   }
   .xhair--on .xhair__dot{ transform:rotate(45deg) scale(1.7); background:var(--pulse); border-color:var(--ink); }
-  .xhair__tag{
-    position:fixed; margin:14px 0 0 16px;
-    font-size:.58rem; letter-spacing:.18em; color:var(--pulse-hi); white-space:nowrap;
-  }
 
   /* ── pantallas anchas: más aire alrededor del título ── */
   @media (min-width:900px){
@@ -319,9 +315,6 @@
 
 <div class="stage">
   <div class="tape" aria-hidden="true"></div>
-
-  <header class="hud hud--tl"><b>HF</b></header>
-  <div class="hud hud--tr" aria-hidden="true"><span class="dot"></span>SIGNAL: LIVE</div>
 
   <main class="core">
     <h1 class="mark" aria-label="HERMOFEST">
@@ -378,7 +371,7 @@
 
 <div class="xhair" aria-hidden="true">
   <div class="xhair__v"></div><div class="xhair__h"></div>
-  <div class="xhair__dot"></div><div class="xhair__tag">X:0000 // Y:0000</div>
+  <div class="xhair__dot"></div>
 </div>
 
 <script>
@@ -392,81 +385,76 @@
   const ctx = canvas.getContext('2d');
   const DPR = Math.min(devicePixelRatio || 1, 2);
   let W, H, CX, CY;
+  let cols, drops, colSpd, fontSize;   /* lluvia Matrix (usadas por resize→setupRain) */
   function resize(){
     W = innerWidth; H = innerHeight;
     canvas.width = W * DPR; canvas.height = H * DPR;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     CX = W / 2; CY = H / 2;
-    ctx.fillStyle = '#030308'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#020805'; ctx.fillRect(0, 0, W, H);
+    setupRain();
   }
   resize();
   addEventListener('resize', resize);
 
-  const INK = [242, 242, 247], BLUE = [80, 100, 255];
-  const N = W < 700 ? 150 : 290;
-  const parts = [];
-  const spawn = p => { p.x = Math.random()*2-1; p.y = Math.random()*2-1; p.z = 0.55+Math.random()*0.45; p.pz = p.z; p.b = Math.random(); };
-  for (let i=0;i<N;i++){ const p={}; spawn(p); p.z = 0.05+Math.random()*0.95; p.pz=p.z; parts.push(p); }
+  /* ── lluvia de código Matrix ─────────────────────────────────────── */
+  const GLYPHS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモ0123456789:=+*<>#@%$'.split('');
+  function setupRain(){
+    fontSize = W < 500 ? 15 : 19;
+    cols = Math.ceil(W / fontSize) + 1;
+    drops = Array.from({length:cols}, () => Math.random() * -60);
+    colSpd = Array.from({length:cols}, () => 0.45 + Math.random() * 0.85);
+  }
+  setupRain();
 
-  const BASE_SPEED = reduced ? 0.0003 : 0.0018;
-  let speed = BASE_SPEED, targetSpeed = BASE_SPEED;
-  let boost = 0.14, targetBoost = 0.14;
-  let mx=0,my=0,tmx=0,tmy=0, hasPointer=false;
-  const rings=[];
+  let rainSpeed = reduced ? 0.3 : 1, rainTarget = rainSpeed;
+  const rings = [];
 
-  function field(t){
-    if (!hasPointer && !reduced){ tmx = Math.sin(t*0.00013)*0.3; tmy = Math.cos(t*0.00017)*0.25; }
-    speed += (targetSpeed-speed)*0.055;
-    boost += (targetBoost-boost)*0.07;
-    mx += (tmx-mx)*0.05; my += (tmy-my)*0.05;
-    ctx.fillStyle = reduced ? '#030308' : 'rgba(3,3,8,0.36)';
-    ctx.fillRect(0,0,W,H);
-    const f = Math.min(W,H)*0.85;
-    const vx = CX+mx*190, vy = CY+my*190;
-    for (const p of parts){
-      p.pz=p.z; p.z-=speed;
-      if (p.z<=0.02){ spawn(p); continue; }
-      const sx=vx+(p.x*f)/p.z, sy=vy+(p.y*f)/p.z;
-      const px=vx+(p.x*f)/p.pz, py=vy+(p.y*f)/p.pz;
-      if (sx<-60||sx>W+60||sy<-60||sy>H+60){ spawn(p); continue; }
-      const tt=Math.min(1,p.b*0.4+boost);
-      const r=INK[0]+(BLUE[0]-INK[0])*tt, g=INK[1]+(BLUE[1]-INK[1])*tt, b=INK[2]+(BLUE[2]-INK[2])*tt;
-      const a=Math.min(1,(1-p.z)*1.15)*0.85;
-      ctx.strokeStyle=`rgba(${r|0},${g|0},${b|0},${a.toFixed(3)})`;
-      ctx.lineWidth=(1-p.z)*2+0.3;
-      ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(sx,sy); ctx.stroke();
+  function field(){
+    rainSpeed += (rainTarget - rainSpeed) * 0.06;
+    /* estela: velo verde-negro que desvanece los caracteres anteriores */
+    ctx.fillStyle = reduced ? '#020805' : 'rgba(2,8,5,0.09)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.font = `${fontSize}px "Source Code Pro", ui-monospace, monospace`;
+    ctx.textAlign = 'center';
+    for (let i = 0; i < cols; i++){
+      const x = i * fontSize + fontSize / 2;
+      const y = drops[i] * fontSize;
+      if (y > 0){
+        /* cabeza brillante (a veces casi blanca) */
+        ctx.fillStyle = Math.random() < 0.06 ? '#daffe6' : '#5bff8a';
+        ctx.fillText(GLYPHS[(Math.random()*GLYPHS.length)|0], x, y);
+        /* un carácter de estela en verde medio */
+        ctx.fillStyle = 'rgba(28,150,70,0.5)';
+        ctx.fillText(GLYPHS[(Math.random()*GLYPHS.length)|0], x, y - fontSize);
+      }
+      drops[i] += colSpd[i] * rainSpeed;
+      if (y > H && Math.random() > 0.972) drops[i] = Math.random() * -18;
     }
-    if (!reduced){ ctx.fillStyle='rgba(242,242,247,0.05)'; for(let i=0;i<22;i++) ctx.fillRect(Math.random()*W,Math.random()*H,2,2); }
-    for (let i=rings.length-1;i>=0;i--){
-      const k=rings[i]; k.r+=11; k.a*=0.92;
-      if (k.a<0.02){ rings.splice(i,1); continue; }
-      ctx.strokeStyle=`rgba(80,100,255,${k.a.toFixed(3)})`; ctx.lineWidth=2;
-      ctx.beginPath(); ctx.arc(k.x,k.y,k.r,0,Math.PI*2); ctx.stroke();
+    /* ondas verdes al tocar */
+    for (let i = rings.length - 1; i >= 0; i--){
+      const k = rings[i]; k.r += 11; k.a *= 0.92;
+      if (k.a < 0.02){ rings.splice(i, 1); continue; }
+      ctx.strokeStyle = `rgba(77,255,134,${k.a.toFixed(3)})`; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(k.x, k.y, k.r, 0, Math.PI * 2); ctx.stroke();
     }
     requestAnimationFrame(field);
   }
   requestAnimationFrame(field);
 
-  addEventListener('pointermove', e => {
-    if (e.pointerType==='mouse') hasPointer=true;
-    tmx = e.clientX/W-0.5; tmy = e.clientY/H-0.5;
-  }, { passive:true });
-
-  /* tap en el vacío: onda + flash invertido */
+  /* tap en el vacío: onda verde + sacudida */
   addEventListener('click', e => {
     if (e.target.closest('a, button, .sheet')) return;
     rings.push({ x:e.clientX, y:e.clientY, r:6, a:0.9 });
     if (reduced) return;
-    speed = Math.min(speed+0.014, 0.03);
-    document.body.classList.add('invert','shake');
-    setTimeout(()=>document.body.classList.remove('invert'),80);
-    setTimeout(()=>document.body.classList.remove('shake'),170);
+    document.body.classList.add('shake');
+    setTimeout(()=>document.body.classList.remove('shake'), 170);
   });
 
   function pulse(ms){
-    targetSpeed=0.013; targetBoost=0.85;
+    rainTarget = 2.8;
     clearTimeout(pulse._t);
-    pulse._t=setTimeout(()=>{ targetSpeed=BASE_SPEED; targetBoost=0.14; }, ms);
+    pulse._t = setTimeout(()=>{ rainTarget = reduced ? 0.3 : 1; }, ms);
   }
 
   /* ── título: letras que tiemblan ── */
@@ -566,7 +554,7 @@
         x=dx+(p.tx-dx)*e+curve*0.5; y=dy+(p.ty-dy)*e+curve;
       }
       c2.globalAlpha=(0.1+0.9*e)*(p.blue?0.85:1);
-      c2.fillStyle=p.blue?'#7d8dff':'#f2f2f7';
+      c2.fillStyle=p.blue?'#daffe6':'#5bff8a';
       c2.fillRect(x,y,p.sz,p.sz);
     }
     c2.globalAlpha=1;
@@ -610,18 +598,15 @@
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   addEventListener('keydown', e => { if (e.key === 'Escape' && openKey) close(); });
 
-  /* ── mira de francotirador (solo mouse) ── */
+  /* ── mira / cursor (solo mouse) ── */
   if (finePointer){
     document.documentElement.classList.add('has-cursor');
     const xh=document.querySelector('.xhair'), v=xh.querySelector('.xhair__v'), h=xh.querySelector('.xhair__h');
-    const dot=xh.querySelector('.xhair__dot'), tag=xh.querySelector('.xhair__tag');
-    const pad=n=>String(n|0).padStart(4,'0');
+    const dot=xh.querySelector('.xhair__dot');
     addEventListener('pointermove', e => {
       const x=e.clientX,y=e.clientY;
       v.style.left=x+'px'; h.style.top=y+'px';
       dot.style.left=x+'px'; dot.style.top=y+'px';
-      tag.style.left=x+'px'; tag.style.top=y+'px';
-      tag.textContent=`X:${pad(x)} // Y:${pad(y)}`;
       xh.classList.toggle('xhair--on', !!e.target.closest('a, button'));
     }, { passive:true });
   }
