@@ -144,7 +144,7 @@
      El bg de cada letra lo alinea el JS (fillMark) para que sea continuo. */
   .mark__line--img .mark__ch{
     background-color:var(--ink);         /* fallback si la imagen no carga */
-    background-image:url("acceso/og.jpg");
+    background-image:url("acceso/faces.jpg");
     background-repeat:no-repeat;
     -webkit-background-clip:text; background-clip:text;
     color:transparent; -webkit-text-fill-color:transparent;
@@ -586,11 +586,11 @@
     const mr = mark.getBoundingClientRect();
     const mw = mr.width, mh = mr.height;
     if (!mw || !mh) return;
-    const scale = Math.max(mw/1200, mh/630);
-    const bw = 1200*scale, bh = 630*scale;
-    /* baja la imagen para que las CARAS (parte superior del og) caigan dentro
-       de las letras, en vez del torso */
-    const ox = (mw - bw)/2, oy = (mh - bh)/2 + bh*0.22;
+    const IW = 1600, IH = 900;   /* dimensiones de acceso/faces.jpg */
+    const scale = Math.max(mw/IW, mh/IH);
+    const bw = IW*scale, bh = IH*scale;
+    /* baja la imagen para que las CARAS caigan dentro de las letras */
+    const ox = (mw - bw)/2, oy = (mh - bh)/2 + bh*0.28;
     for (const s of imgChars){
       const r = s.getBoundingClientRect();
       s.style.backgroundSize = bw+'px '+bh+'px';
