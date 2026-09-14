@@ -25,6 +25,8 @@
     --dim:   #6b2c36;              /* rojo oscuro (secundario) */
     --pulse: #b2122a;              /* rojo profundo (acento) */
     --pulse-hi:#ff4d5e;            /* rojo brillante (glow) */
+    --soft:  #e37482;              /* rojo suave (secundario) */
+    --ice:   #ffdae0;              /* casi blanco rosado (énfasis) */
     --line:  rgba(200,60,88,.18);
     --mono:  "Source Code Pro", ui-monospace, Consolas, monospace;
     --disp:  "BBH Bartle", Impact, "Arial Black", sans-serif;
@@ -292,6 +294,19 @@
     font-size:clamp(1.56rem,7.8vw,2.08rem); margin:.35rem 0 .1rem;
   }
   .rule{ height:2px; background:var(--ink); margin:1.1rem 0; width:40%; }
+  /* cronograma del line-up: hora chica arriba + artista grande */
+  .lineup{ list-style:none; display:flex; flex-direction:column; gap:clamp(.9rem,3.6vw,1.35rem); }
+  .lineup li{ display:flex; flex-direction:column; gap:.1rem; }
+  .lu-time{
+    font-family:var(--wide); font-size:clamp(.72rem,3.2vw,.85rem); letter-spacing:.22em;
+    color:var(--soft); text-transform:uppercase;
+  }
+  .lu-act{
+    font-family:var(--cond); font-weight:900; text-transform:uppercase;
+    font-size:clamp(1.9rem,9vw,2.7rem); line-height:1; letter-spacing:.02em;
+    color:var(--ice); text-shadow:0 0 14px rgba(255,91,106,.45);
+  }
+  .lu-act em{ font-style:normal; font-weight:900; color:var(--pulse-hi); font-size:.62em; letter-spacing:.06em; }
   .sub{
     font-family:var(--wide); font-size:clamp(1.3rem,6.5vw,1.56rem); letter-spacing:.14em; color:var(--dim);
     text-transform:uppercase; margin-top:1.2rem; line-height:1.7;
@@ -422,9 +437,11 @@
   </div>
   <div class="sheet sheet--act" data-panel="act" role="dialog" aria-label="Line-Up" aria-modal="true">
     <div class="sheet__tag"><span>Line-up <em>///</em> la cabina</span><button class="sheet__close" type="button" aria-label="Cerrar"></button></div>
-    <p class="big" data-pt>Barello</p>
-    <div class="rule" aria-hidden="true"></div>
-    <p class="big" data-pt>Ramón</p>
+    <ul class="lineup">
+      <li><span class="lu-time">11 – 01</span><span class="lu-act">Barello</span></li>
+      <li><span class="lu-time">01 – 04</span><span class="lu-act">Ramón</span></li>
+      <li><span class="lu-time">04 – 06</span><span class="lu-act">Barello <em>b2b</em> Ramón</span></li>
+    </ul>
   </div>
   <div class="sheet sheet--date" data-panel="date" role="dialog" aria-label="Fecha" aria-modal="true">
     <div class="sheet__tag"><span>Fecha <em>///</em> la noche</span><button class="sheet__close" type="button" aria-label="Cerrar"></button></div>
