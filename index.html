@@ -588,7 +588,9 @@
     if (!mw || !mh) return;
     const scale = Math.max(mw/1200, mh/630);
     const bw = 1200*scale, bh = 630*scale;
-    const ox = (mw - bw)/2, oy = (mh - bh)/2;
+    /* baja la imagen para que las CARAS (parte superior del og) caigan dentro
+       de las letras, en vez del torso */
+    const ox = (mw - bw)/2, oy = (mh - bh)/2 + bh*0.22;
     for (const s of imgChars){
       const r = s.getBoundingClientRect();
       s.style.backgroundSize = bw+'px '+bh+'px';
