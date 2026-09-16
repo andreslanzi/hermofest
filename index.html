@@ -241,6 +241,32 @@
   .btn--reg{ animation-delay:1.32s; }
   .btn--share svg, .btn--reg svg{ width:1.3em; height:1.3em; flex:none; }
 
+  /* ── conejo blanco: easter egg que vuelve al /acceso ── */
+  .rabbit{
+    position:fixed; left:50%; bottom:5%; transform:translateX(-50%);
+    z-index:6; width:clamp(30px,5vw,40px); text-decoration:none;
+    color:var(--ice); opacity:.45; cursor:pointer;
+    transition:opacity .3s ease;
+    animation:bootFade .7s both; animation-delay:1.5s;
+  }
+  .rabbit__in{ display:block; transition:transform .25s cubic-bezier(.2,.8,.2,1);
+    animation:rabbitGlow 3.2s ease-in-out infinite; }
+  .rabbit__in svg{ display:block; width:100%; height:auto; }
+  @keyframes rabbitGlow{
+    0%,100%{ filter:drop-shadow(0 0 4px rgba(255,120,140,.45)); }
+    50%{ filter:drop-shadow(0 0 11px rgba(255,120,140,.85)); }
+  }
+  .rabbit:hover, .rabbit:focus-visible{ opacity:1; outline:none; }
+  .rabbit:hover .rabbit__in, .rabbit:focus-visible .rabbit__in{ transform:translateY(-4px) scale(1.12); }
+  .rabbit__tip{
+    position:absolute; bottom:calc(100% + 7px); left:50%; transform:translateX(-50%);
+    font-family:var(--mono); font-size:.6rem; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--soft); white-space:nowrap; opacity:0; pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .rabbit:hover .rabbit__tip, .rabbit:focus-visible .rabbit__tip{ opacity:.85; }
+  @media (prefers-reduced-motion: reduce){ .rabbit__in{ animation:none; } }
+
   /* ── overlay con los boxes ── */
   .overlay{
     position:fixed; inset:0; z-index:10;
@@ -480,6 +506,20 @@
   <button class="btn btn--hrs" type="button" data-node="hrs" aria-haspopup="dialog" aria-expanded="false">
     <span class="btn__x" aria-hidden="true"></span><span>Horarios</span>
   </button>
+
+  <a class="rabbit" href="acceso/" aria-label="Seguí al conejo blanco — volver al acceso">
+    <span class="rabbit__in" aria-hidden="true">
+      <svg viewBox="0 0 64 72" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="23" cy="17" rx="5" ry="15" transform="rotate(-11 23 17)"/>
+        <ellipse cx="41" cy="17" rx="5" ry="15" transform="rotate(11 41 17)"/>
+        <ellipse cx="23" cy="17" rx="2.2" ry="9" transform="rotate(-11 23 17)" fill="rgba(178,18,42,.55)"/>
+        <ellipse cx="41" cy="17" rx="2.2" ry="9" transform="rotate(11 41 17)" fill="rgba(178,18,42,.55)"/>
+        <circle cx="32" cy="34" r="11"/>
+        <ellipse cx="32" cy="55" rx="16" ry="15"/>
+      </svg>
+    </span>
+    <span class="rabbit__tip">seguí al conejo blanco</span>
+  </a>
 
 </div>
 
