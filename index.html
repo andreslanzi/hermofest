@@ -983,7 +983,9 @@
     }catch(err){
       if (err && err.name === 'AbortError') return;   /* canceló el menú */
     }
-    open('https://wa.me/?text=' + encodeURIComponent(SHARE_TEXT + '\n' + SHARE_URL), '_blank', 'noopener');
+    /* fallback (sin navigator.share, típico en desktop): abre WhatsApp Web.
+       window.open explícito porque acá open() es la función interna de sheets. */
+    window.open('https://wa.me/?text=' + encodeURIComponent(SHARE_TEXT + '\n' + SHARE_URL), '_blank', 'noopener');
   });
 
   /* ── registrar amigos: suma nombres al mismo Google Form ─────────────
