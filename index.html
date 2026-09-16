@@ -241,13 +241,23 @@
   .btn--reg{ animation-delay:1.32s; }
   .btn--share svg, .btn--reg svg{ width:1.3em; height:1.3em; flex:none; }
 
-  /* ── conejo blanco: easter egg que vuelve al /acceso ── */
+  /* ── conejo blanco: easter egg que vuelve al /acceso ──
+     centrado con left/right/margin (NO transform: así el transform
+     queda libre para el movimiento lento y no lo pisa ninguna animación) */
   .rabbit{
-    position:fixed; left:50%; bottom:5%; transform:translateX(-50%);
-    z-index:6; width:clamp(30px,5vw,40px); text-decoration:none;
+    position:fixed; left:0; right:0; bottom:5%; margin-inline:auto;
+    z-index:6; width:clamp(30px,7vw,40px); text-decoration:none;
     color:var(--ice); opacity:.45; cursor:pointer;
     transition:opacity .3s ease;
-    animation:bootFade .7s both; animation-delay:1.5s;
+    animation:rabbitFade .8s ease 1.5s backwards, rabbitDrift 9s ease-in-out 1.5s infinite;
+  }
+  @keyframes rabbitFade{ from{opacity:0} to{opacity:.45} }
+  @keyframes rabbitDrift{
+    0%   { transform:translate(0,0)      rotate(0deg); }
+    25%  { transform:translate(-6px,-7px) rotate(-3deg); }
+    50%  { transform:translate(0,-11px)   rotate(0deg); }
+    75%  { transform:translate(6px,-7px)  rotate(3deg); }
+    100% { transform:translate(0,0)      rotate(0deg); }
   }
   .rabbit__in{ display:block; transition:transform .25s cubic-bezier(.2,.8,.2,1);
     animation:rabbitGlow 3.2s ease-in-out infinite; }
@@ -265,7 +275,7 @@
     transition:opacity .25s ease;
   }
   .rabbit:hover .rabbit__tip, .rabbit:focus-visible .rabbit__tip{ opacity:.85; }
-  @media (prefers-reduced-motion: reduce){ .rabbit__in{ animation:none; } }
+  @media (prefers-reduced-motion: reduce){ .rabbit, .rabbit__in{ animation:none; } }
 
   /* ── overlay con los boxes ── */
   .overlay{
@@ -518,7 +528,7 @@
         <ellipse cx="32" cy="55" rx="16" ry="15"/>
       </svg>
     </span>
-    <span class="rabbit__tip">seguí al conejo blanco</span>
+    <span class="rabbit__tip">follow the white rabbit</span>
   </a>
 
 </div>
