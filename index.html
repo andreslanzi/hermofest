@@ -275,6 +275,8 @@
     transition:opacity .25s ease;
   }
   .rabbit:hover .rabbit__tip, .rabbit:focus-visible .rabbit__tip{ opacity:.85; }
+  /* en táctil (sin hover) el tooltip queda siempre visible */
+  @media (hover: none){ .rabbit__tip{ opacity:.8; } }
   @media (prefers-reduced-motion: reduce){ .rabbit, .rabbit__in{ animation:none; } }
 
   /* ── overlay con los boxes ── */
