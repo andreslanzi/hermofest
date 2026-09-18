@@ -460,19 +460,42 @@
     .btn--date, .btn--hrs{ bottom:13%; }
   }
 
-  /* ── botón de sonido ── */
-  #sndBtn{
+  /* ── control de sonido: botón mute + slider de volumen ── */
+  #sndCtl{
     position:fixed; top:calc(1rem + env(safe-area-inset-top)); right:1rem; z-index:30;
-    background:rgba(8,2,4,.6); border:1px solid var(--dim); color:var(--ink);
-    padding:9px; line-height:0; cursor:pointer;
-    transition:background .2s, color .2s, border-color .2s;
+    display:flex; align-items:center; gap:10px;
+    background:rgba(8,2,4,.6); border:1px solid var(--dim);
+    padding:7px 11px; transition:border-color .2s;
   }
-  #sndBtn:hover{ border-color:var(--pulse); color:var(--pulse-hi); }
-  #sndBtn[hidden]{ display:none; }
-  @media (max-width:620px){ #sndBtn{ padding:7px; } #sndBtn svg{ width:24px; height:24px; } }
+  #sndCtl:hover, #sndCtl:focus-within{ border-color:var(--pulse); }
+  #sndCtl[hidden]{ display:none; }
+  #volSlider{
+    -webkit-appearance:none; appearance:none;
+    width:94px; height:4px; border-radius:2px; cursor:pointer; outline:none;
+    background:linear-gradient(to right, var(--ink) var(--fill,100%), var(--dim) var(--fill,100%));
+  }
+  #volSlider::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:14px; height:14px; border-radius:50%;
+    background:var(--ink); border:2px solid var(--void); box-shadow:0 0 6px rgba(255,91,106,.6); cursor:pointer;
+  }
+  #volSlider::-moz-range-thumb{
+    width:14px; height:14px; border-radius:50%; background:var(--ink);
+    border:2px solid var(--void); box-shadow:0 0 6px rgba(255,91,106,.6); cursor:pointer;
+  }
+  #volSlider::-moz-range-track{ height:4px; border-radius:2px; background:transparent; }
+  #sndBtn{
+    background:none; border:none; color:var(--ink); padding:0; line-height:0; cursor:pointer;
+    transition:color .2s; flex:none;
+  }
+  #sndBtn:hover{ color:var(--pulse-hi); }
   #sndBtn .mx{ display:none; }
   #sndBtn.muted .w1, #sndBtn.muted .w2{ display:none; }
   #sndBtn.muted .mx{ display:block; }
+  @media (max-width:620px){
+    #sndCtl{ gap:8px; padding:6px 9px; }
+    #volSlider{ width:76px; }
+    #sndBtn svg{ width:24px; height:24px; }
+  }
 
   /* ── movimiento reducido: quieto ── */
   @media (prefers-reduced-motion: reduce){
@@ -591,15 +614,18 @@
 </div>
 
 <audio id="bgm" src="acceso/soundtrack.mp3" loop preload="auto"></audio>
-<button type="button" id="sndBtn" hidden aria-label="Silenciar música">
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/>
-    <path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/>
-    <path class="w2" d="M18.5 5.5a9 9 0 0 1 0 13"/>
-    <line class="mx" x1="16" y1="9" x2="22" y2="15"/>
-    <line class="mx" x1="22" y1="9" x2="16" y2="15"/>
-  </svg>
-</button>
+<div id="sndCtl" hidden>
+  <input type="range" id="volSlider" min="0" max="100" value="100" step="1" aria-label="Volumen de la música">
+  <button type="button" id="sndBtn" aria-label="Silenciar música">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/>
+      <path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/>
+      <path class="w2" d="M18.5 5.5a9 9 0 0 1 0 13"/>
+      <line class="mx" x1="16" y1="9" x2="22" y2="15"/>
+      <line class="mx" x1="22" y1="9" x2="16" y2="15"/>
+    </svg>
+  </button>
+</div>
 
 <script>
 (() => {
@@ -921,13 +947,46 @@
      Se intenta autoplay al cargar; si el navegador lo bloquea, arranca
      con la primera interacción. Sin acceso/soundtrack.mp3, silencio. */
   const bgm = document.getElementById('bgm');
+  const sndCtl = document.getElementById('sndCtl');
   const sndBtn = document.getElementById('sndBtn');
+  const volSlider = document.getElementById('volSlider');
   const BGM_VOL = 1;
   const store = { get:k => { try{ return sessionStorage.getItem(k); }catch(_){ return null; } },
                   set:(k,v) => { try{ sessionStorage.setItem(k,v); }catch(_){} } };
   let bgmStarted = false, bgmTimeSet = false;
-  bgm.muted = store.get('hf_bgm_m') === '1';
-  sndBtn.classList.toggle('muted', bgm.muted);
+  /* volumen 0..1 (curVol) + último valor audible (para el toggle de mute) */
+  let curVol = 1, lastVol = 1;
+  (function initVol(){
+    const sv = parseFloat(store.get('hf_bgm_v'));
+    if (isFinite(sv)) curVol = Math.min(1, Math.max(0, sv/100));
+    else if (store.get('hf_bgm_m') === '1') curVol = 0;
+    if (curVol > 0) lastVol = curVol;
+    bgm.muted = curVol === 0;
+  })();
+  function updateSliderUI(){
+    if (!volSlider) return;
+    volSlider.value = Math.round(curVol*100);
+    volSlider.style.setProperty('--fill', Math.round(curVol*100)+'%');
+    sndBtn.classList.toggle('muted', curVol === 0);
+  }
+  function setVolume(v, doKick){
+    v = Math.min(1, Math.max(0, v));
+    curVol = v; if (v > 0) lastVol = v;
+    bgm.muted = (v === 0);
+    if (gainN && actx){
+      if (actx.state === 'suspended') actx.resume().catch(()=>{});
+      const now = actx.currentTime;
+      gainN.gain.cancelScheduledValues(now);
+      gainN.gain.setValueAtTime(gainN.gain.value, now);
+      gainN.gain.linearRampToValueAtTime(v, now + 0.08);
+    }
+    try{ bgm.volume = v; }catch(_){}
+    updateSliderUI();
+    store.set('hf_bgm_v', Math.round(v*100));
+    store.set('hf_bgm_m', v === 0 ? '1' : '0');
+    if (v > 0 && doKick && (!bgmStarted || bgm.paused)) kickAudio();
+  }
+  updateSliderUI();
   /* fade vía GainNode: en iOS audio.volume es de solo lectura; el grafo se
      crea solo dentro de un gesto y solo si el audio no arrancó por autoplay */
   const FADE_S = 1.5;
@@ -950,13 +1009,13 @@
       const now = actx.currentTime;
       gainN.gain.cancelScheduledValues(now);
       gainN.gain.setValueAtTime(0, now);
-      gainN.gain.linearRampToValueAtTime(BGM_VOL, now + FADE_S);
+      gainN.gain.linearRampToValueAtTime(curVol, now + FADE_S);
     } else {
       bgm.volume = 0;
       const t0 = performance.now();
       const fade = setInterval(() => {
         const k = Math.min(1, (performance.now() - t0) / (FADE_S*1000));
-        bgm.volume = BGM_VOL * k;
+        bgm.volume = curVol * k;
         if (k >= 1) clearInterval(fade);
       }, 50);
     }
@@ -971,7 +1030,7 @@
     bgm.play().then(() => {
       if (bgmStarted) return;
       bgmStarted = true;
-      sndBtn.hidden = false;
+      sndCtl.hidden = false;
       beginFade();
       setInterval(() => store.set('hf_bgm_t', bgm.currentTime), 1000);
     }).catch(() => {});
@@ -989,22 +1048,24 @@
   function kickAudio(){
     ensureGraph();
     if (actx && actx.state !== 'running') actx.resume().catch(()=>{});
-    if (gainN && actx){ const now = actx.currentTime; gainN.gain.cancelScheduledValues(now); gainN.gain.setValueAtTime(BGM_VOL, now); }
-    bgm.volume = 1; bgm.muted = false;
+    const vol = curVol > 0 ? curVol : 1;
+    if (gainN && actx){ const now = actx.currentTime; gainN.gain.cancelScheduledValues(now); gainN.gain.setValueAtTime(vol, now); }
+    try{ bgm.volume = vol; }catch(_){}
+    bgm.muted = false;
     const p = bgm.play();
     if (p && p.then) p.then(() => {
-      if (!bgmStarted){ bgmStarted = true; sndBtn.hidden = false; setInterval(() => store.set('hf_bgm_t', bgm.currentTime), 1000); }
+      if (!bgmStarted){ bgmStarted = true; sndCtl.hidden = false; setInterval(() => store.set('hf_bgm_t', bgm.currentTime), 1000); }
     }).catch(()=>{});
   }
+  /* ícono = toggle mute; slider = volumen */
   sndBtn.addEventListener('click', e => {
     e.stopPropagation();
-    const playing = bgmStarted && !bgm.paused;
-    const mute = playing ? !bgm.muted : false;   /* si no suena, cualquier toque la arranca */
-    bgm.muted = mute;
-    sndBtn.classList.toggle('muted', mute);
-    store.set('hf_bgm_m', mute ? '1' : '0');
-    if (!mute) kickAudio();
+    if (curVol > 0) setVolume(0);                       /* mutear */
+    else setVolume(lastVol > 0 ? lastVol : 1, true);    /* volver al último volumen */
   });
+  volSlider.addEventListener('input', () => { ensureGraph(); setVolume((+volSlider.value)/100, true); });
+  volSlider.addEventListener('pointerdown', e => e.stopPropagation());
+  volSlider.addEventListener('click', e => e.stopPropagation());
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && bgmStarted && !bgm.muted){
       if (actx && actx.state === 'suspended') actx.resume().catch(()=>{});
