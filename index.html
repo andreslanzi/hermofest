@@ -120,6 +120,35 @@
     color:var(--pulse-hi); text-transform:uppercase;
     animation:bootFade .8s .2s both;
   }
+  /* héroe: el título y el countdown comparten la misma celda (no salta el layout) */
+  .hero{ display:grid; justify-items:center; align-items:center; }
+  .hero > .mark, .hero > .countdown{ grid-column:1; grid-row:1; }
+  /* ── countdown ── */
+  .countdown{
+    display:flex; align-items:flex-start; justify-content:center;
+    gap:clamp(.25rem,1.6vw,.9rem); max-width:100%;
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity .7s ease; transform-origin:center;
+  }
+  .countdown.on{ opacity:1; visibility:visible; pointer-events:auto; }
+  .cd-unit{ display:flex; flex-direction:column; align-items:center;
+    min-width:clamp(2.4rem,12vw,5rem); }
+  .cd-num{
+    font-family:var(--mono); font-weight:600; font-variant-numeric:tabular-nums;
+    font-size:clamp(2.1rem,11vw,5.2rem); line-height:1; color:var(--ice);
+    text-shadow:0 0 18px rgba(255,77,110,.5), 0 0 4px rgba(255,77,110,.9);
+  }
+  .cd-lbl{
+    font-family:var(--mono); font-size:clamp(.5rem,2.3vw,.76rem); letter-spacing:.22em;
+    text-transform:uppercase; color:var(--dim); margin-top:.5rem;
+  }
+  .cd-sep{
+    font-family:var(--mono); font-weight:600; font-size:clamp(1.5rem,7.5vw,3.8rem); line-height:1;
+    color:var(--mid); align-self:flex-start; margin-top:.05em; opacity:.75;
+    animation:cdBlink 1s steps(1) infinite;
+  }
+  @keyframes cdBlink{ 50%{ opacity:.12; } }
+  @media (max-width:620px){ .cd-lbl{ margin-top:.35rem; } }
   .mark{
     font-family:var(--disp); font-weight:400; line-height:.82;
     text-transform:uppercase; user-select:none;
@@ -515,10 +544,21 @@
 <div class="stage">
 
   <main class="core">
-    <h1 class="mark" aria-label="HERMOFEST">
-      <span class="mark__line mark__line--img" data-text="HERMO" aria-hidden="true">HERMO</span>
-      <span class="mark__line mark__line--ghost mark__line--img" data-text="FEST" aria-hidden="true">FEST</span>
-    </h1>
+    <div class="hero">
+      <h1 class="mark" aria-label="HERMOFEST">
+        <span class="mark__line mark__line--img" data-text="HERMO" aria-hidden="true">HERMO</span>
+        <span class="mark__line mark__line--ghost mark__line--img" data-text="FEST" aria-hidden="true">FEST</span>
+      </h1>
+      <div class="countdown" id="countdown" role="timer" aria-label="Cuenta regresiva para HERMOFEST">
+        <div class="cd-unit"><span class="cd-num" id="cdD">00</span><span class="cd-lbl">días</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-unit"><span class="cd-num" id="cdH">00</span><span class="cd-lbl">hs</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-unit"><span class="cd-num" id="cdM">00</span><span class="cd-lbl">min</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-unit"><span class="cd-num" id="cdS">00</span><span class="cd-lbl">seg</span></div>
+      </div>
+    </div>
     <p class="eyebrow">Desde el sótano</p>
     <div class="core__actions">
       <button class="btn btn--share" type="button" id="shareBtn" aria-label="Compartir por WhatsApp">
@@ -873,10 +913,51 @@
       const poll = () => { if (parts.every(p => p.done)) fin(); else setTimeout(poll, 120); };
       setTimeout(poll, 500);
       setTimeout(fin, 3400);   /* red de seguridad: el título nunca queda oculto */
+      setTimeout(revealCountdown, 2200);   /* ya armado el título, se disuelve al countdown */
     };
     addEventListener('message', e => { if (e.data === 'hf:assemble') go(); });
     setTimeout(go, 2500);
   }
+
+  /* ── countdown: pasado el intro, HERMOFEST se disuelve y aparece la cuenta
+     regresiva hacia la fiesta (02.10.26 23:00, hora Buenos Aires) ── */
+  const CD_TARGET = Date.parse('2026-10-02T23:00:00-03:00');
+  const cdEl = document.getElementById('countdown');
+  const cdD=document.getElementById('cdD'), cdH=document.getElementById('cdH'),
+        cdM=document.getElementById('cdM'), cdS=document.getElementById('cdS');
+  const pad2 = n => String(n).padStart(2,'0');
+  function cdTick(){
+    let ms = CD_TARGET - Date.now(); if (ms < 0) ms = 0;
+    const s = Math.floor(ms/1000);
+    cdD.textContent = pad2(Math.floor(s/86400));
+    cdH.textContent = pad2(Math.floor(s%86400/3600));
+    cdM.textContent = pad2(Math.floor(s%3600/60));
+    cdS.textContent = pad2(s%60);
+  }
+  cdTick(); setInterval(cdTick, 1000);
+
+  /* garantía anti-desborde: si el countdown no entra en el ancho, se escala */
+  function fitCountdown(){
+    cdEl.style.transform = 'none';
+    const avail = document.querySelector('.core').clientWidth - 6;
+    const w = cdEl.scrollWidth;
+    if (w > avail && w > 0) cdEl.style.transform = 'scale(' + (avail/w).toFixed(4) + ')';
+  }
+  let cdDissolved = false;
+  function revealCountdown(){
+    if (cdDissolved) return; cdDissolved = true;
+    mark.classList.add('assembling');           /* oculta las letras sólidas */
+    if (!reduced){
+      [...document.querySelectorAll('.mark__line')].forEach(el => {
+        const p = new ParticleText(el);
+        if (p.build()){ p.prog = 0.99; texts.push(p); p.disperse(); }  /* se dispersan hacia afuera */
+      });
+    }
+    cdEl.classList.add('on');                    /* crossfade del countdown */
+    fitCountdown();
+  }
+  addEventListener('resize', () => { if (cdDissolved) fitCountdown(); });
+  if (!/[?&]embed=1/.test(location.search)) setTimeout(revealCountdown, 2000);
   (function ptLoop(t){ for (const o of texts) o.step(t); requestAnimationFrame(ptLoop); })(0);
 
   /* ── abrir / cerrar boxes ─────────────────────────────────────────── */
