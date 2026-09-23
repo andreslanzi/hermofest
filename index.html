@@ -907,13 +907,7 @@
     let began = false;
     const go = () => {
       if (began) return; began = true;
-      const parts = [...document.querySelectorAll('.mark__line')].map(el => new ParticleText(el));
-      parts.forEach(p => { texts.push(p); p.assemble(); });
-      const fin = () => mark.classList.remove('assembling');
-      const poll = () => { if (parts.every(p => p.done)) fin(); else setTimeout(poll, 120); };
-      setTimeout(poll, 500);
-      setTimeout(fin, 3400);   /* red de seguridad: el título nunca queda oculto */
-      setTimeout(revealCountdown, 2200);   /* ya armado el título, se disuelve al countdown */
+      assembleTitle();          /* arma el título con las mismas partículas del loop */
     };
     addEventListener('message', e => { if (e.data === 'hf:assemble') go(); });
     setTimeout(go, 2500);
@@ -943,21 +937,37 @@
     const w = cdEl.scrollWidth;
     if (w > avail && w > 0) cdEl.style.transform = 'scale(' + (avail/w).toFixed(4) + ')';
   }
-  let cdDissolved = false;
-  function revealCountdown(){
-    if (cdDissolved) return; cdDissolved = true;
-    mark.classList.add('assembling');           /* oculta las letras sólidas */
-    if (!reduced){
-      [...document.querySelectorAll('.mark__line')].forEach(el => {
-        const p = new ParticleText(el);
-        if (p.build()){ p.prog = 0.99; texts.push(p); p.disperse(); }  /* se dispersan hacia afuera */
-      });
-    }
-    cdEl.classList.add('on');                    /* crossfade del countdown */
-    fitCountdown();
+  addEventListener('resize', () => { if (cdShowing) fitCountdown(); });
+
+  /* ── loop: cada 3s alterna entre el cartel HERMOFEST y el countdown,
+     disolviéndose en partículas en cada cambio ── */
+  const markParts = [...document.querySelectorAll('.mark__line')].map(el => new ParticleText(el));
+  markParts.forEach(p => texts.push(p));   /* que el ptLoop los anime */
+  let cdShowing = false, assemblePoll = null;
+
+  function dissolveTitle(){                 /* cartel → partículas que se dispersan */
+    clearTimeout(assemblePoll);
+    mark.classList.add('assembling');       /* oculta las letras sólidas */
+    markParts.forEach(p => { if (!p.built) p.build(); p.prog = 0.99; p.disperse(); });
   }
-  addEventListener('resize', () => { if (cdDissolved) fitCountdown(); });
-  if (!/[?&]embed=1/.test(location.search)) setTimeout(revealCountdown, 2000);
+  function assembleTitle(){                 /* partículas → cartel sólido */
+    clearTimeout(assemblePoll);
+    markParts.forEach(p => p.assemble());
+    const poll = () => { if (markParts.every(p => p.done)) mark.classList.remove('assembling');
+                         else assemblePoll = setTimeout(poll, 100); };
+    assemblePoll = setTimeout(poll, 300);
+  }
+  function showTimer(){ cdShowing = true;  if (!reduced) dissolveTitle(); else mark.classList.add('assembling'); cdEl.classList.add('on'); fitCountdown(); }
+  function showTitle(){ cdShowing = false; cdEl.classList.remove('on'); if (!reduced) assembleTitle(); else mark.classList.remove('assembling'); }
+
+  let loopStarted = false;
+  function startLoop(){
+    if (loopStarted) return; loopStarted = true;
+    showTimer();                             /* primer cambio: al countdown */
+    setInterval(() => { cdShowing ? showTitle() : showTimer(); }, 3000);
+  }
+  /* arranca tras el intro (en /acceso embed espera a que el título se arme) */
+  setTimeout(startLoop, /[?&]embed=1/.test(location.search) ? 4500 : 3000);
   (function ptLoop(t){ for (const o of texts) o.step(t); requestAnimationFrame(ptLoop); })(0);
 
   /* ── abrir / cerrar boxes ─────────────────────────────────────────── */
