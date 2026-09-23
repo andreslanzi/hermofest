@@ -128,7 +128,7 @@
     display:flex; align-items:flex-start; justify-content:center;
     gap:clamp(.25rem,1.6vw,.9rem); max-width:100%;
     opacity:0; visibility:hidden; pointer-events:none;
-    transition:opacity .7s ease; transform-origin:center;
+    transition:opacity .45s ease; transform-origin:center;
   }
   .countdown.on{ opacity:1; visibility:visible; pointer-events:auto; }
   .cd-unit{ display:flex; flex-direction:column; align-items:center;
@@ -164,7 +164,7 @@
     color:transparent; -webkit-text-stroke:2.5px var(--ink);
     margin-left:.9em; animation-delay:.15s;
   }
-  .mark__ch{ display:inline-block; transition:opacity .6s ease; }
+  .mark__ch{ display:inline-block; }
   /* llegada desde /acceso: el título aparece recién cuando sus partículas lo armaron */
   .mark.assembling .mark__ch,
   .mark.assembling .mark__line::before,
@@ -957,14 +957,27 @@
                          else assemblePoll = setTimeout(poll, 100); };
     assemblePoll = setTimeout(poll, 300);
   }
-  function showTimer(){ cdShowing = true;  if (!reduced) dissolveTitle(); else mark.classList.add('assembling'); cdEl.classList.add('on'); fitCountdown(); }
-  function showTitle(){ cdShowing = false; cdEl.classList.remove('on'); if (!reduced) assembleTitle(); else mark.classList.remove('assembling'); }
+  /* transiciones escalonadas: primero se disuelve lo que hay, y recién
+     después aparece lo nuevo (evita el "fantasma" de superposición) */
+  function showTimer(){                       /* cartel → countdown */
+    cdShowing = true;
+    if (reduced){ mark.classList.add('assembling'); cdEl.classList.add('on'); fitCountdown(); return; }
+    dissolveTitle();                          /* letras ocultas al instante, partículas se dispersan */
+    setTimeout(() => { if (cdShowing){ cdEl.classList.add('on'); fitCountdown(); } }, 420);
+  }
+  function showTitle(){                        /* countdown → cartel */
+    cdShowing = false;
+    cdEl.classList.remove('on');              /* el timer se desvanece primero */
+    if (reduced){ mark.classList.remove('assembling'); return; }
+    setTimeout(() => { if (!cdShowing) assembleTitle(); }, 320);
+  }
 
+  const HOLD = 5000;                           /* segundos que se ve cada estado */
   let loopStarted = false;
   function startLoop(){
     if (loopStarted) return; loopStarted = true;
     showTimer();                             /* primer cambio: al countdown */
-    setInterval(() => { cdShowing ? showTitle() : showTimer(); }, 3000);
+    setInterval(() => { cdShowing ? showTitle() : showTimer(); }, HOLD);
   }
   /* arranca tras el intro (en /acceso embed espera a que el título se arme) */
   setTimeout(startLoop, /[?&]embed=1/.test(location.search) ? 4500 : 3000);
