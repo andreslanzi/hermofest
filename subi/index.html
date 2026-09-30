@@ -29,7 +29,8 @@
   }
   h1{
     font-family:var(--disp); font-weight:400; text-transform:uppercase;
-    font-size:clamp(2.3rem,11vw,3.4rem); line-height:.9; letter-spacing:.01em;
+    font-size:clamp(2rem,9vw,3rem); line-height:.9; letter-spacing:.01em;
+    white-space:nowrap; max-width:100%;
     text-align:center; margin:.5rem 0 .1rem; color:var(--ink);
     text-shadow:0 0 22px rgba(255,77,110,.45);
   }
@@ -84,9 +85,8 @@
 <body>
 <canvas id="rain" aria-hidden="true"></canvas>
 <div class="wrap">
-  <p class="brand">HERMOFEST</p>
-  <h1>Subí la noche</h1>
-  <p class="lead">Sacá fotos y videos de la fiesta. Van directo y en privado a los cumpleañeros. Subí los que quieras 🔴</p>
+  <h1>HERMOFEST</h1>
+  <p class="lead">Subí fotos y videos de recuerdo 🔴</p>
 
   <div class="actions">
     <label class="act act--primary">
@@ -105,20 +105,19 @@
       <input type="file" accept="image/*,video/*" multiple data-kind="galeria">
     </label>
   </div>
-  <p class="hint">Si el salón tiene wifi, conectate para subir videos más rápido</p>
 
   <div class="config-warn" id="cfgWarn">⚠️ Falta configurar el destino (Cloudinary). Pasame el cloud name + preset.</div>
   <div class="queue" id="queue"></div>
 
   <div class="done" id="done"><b>¡LISTO! GRACIAS 🔴</b><span>Podés subir más cuando quieras.</span></div>
 
-  <p class="foot">Tu contenido va privado a Andi &amp; Charly<br>· Desde el sótano ·</p>
+  <p class="foot">· Desde el sótano ·</p>
 </div>
 
 <script>
 /* ==== CONFIG: completar con los datos de la cuenta de Cloudinary ==== */
-const CLOUD_NAME    = 'TU_CLOUD_NAME';     /* dashboard de Cloudinary */
-const UPLOAD_PRESET = 'TU_UPLOAD_PRESET';  /* preset "unsigned" (Settings → Upload) */
+const CLOUD_NAME    = 'pcc6iayd';
+const UPLOAD_PRESET = 'hermofest_unsigned';
 /* =================================================================== */
 
 const q = document.getElementById('queue');
@@ -180,6 +179,19 @@ function showDone(){
   clearTimeout(doneTimer);
   doneTimer = setTimeout(() => doneEl.classList.remove('show'), 4000);
 }
+
+/* ── título: achica la fuente si no entra a lo ancho (BBH Bartle es ancha) ── */
+(() => {
+  const h = document.querySelector('h1'), wrap = document.querySelector('.wrap');
+  function fit(){
+    h.style.fontSize = '';
+    let fs = parseFloat(getComputedStyle(h).fontSize), guard = 0;
+    while (h.scrollWidth > wrap.clientWidth && fs > 12 && guard++ < 60){ fs -= 1.5; h.style.fontSize = fs + 'px'; }
+  }
+  fit();
+  addEventListener('resize', fit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+})();
 
 /* ── lluvia matrix roja de fondo (sutil) ── */
 (() => {
