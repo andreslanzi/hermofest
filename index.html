@@ -257,7 +257,7 @@
   /* acciones bajo el título: compartir + registrar amigos, simétricas
      a los lados, centradas justo debajo de "Desde el sótano" */
   .core__actions{
-    display:flex; flex-direction:column; align-items:center; gap:.55rem; margin-top:1.1rem;
+    display:flex; justify-content:center; margin-top:1.1rem;
   }
   /* CTA principal: destacado, relleno rojo, con glow que pulsa para llamar la atención */
   .btn--reg{
@@ -276,19 +276,6 @@
   @keyframes regPulse{
     0%,100%{ box-shadow:5px 5px 0 var(--pulse); }
     50%{ box-shadow:5px 5px 0 var(--pulse), 0 0 26px rgba(255,77,110,.6); }
-  }
-  /* ── SOLD OUT (temporal): registro deshabilitado ── */
-  .btn--reg.is-soldout,
-  .btn--reg.is-soldout:hover,
-  .btn--reg.is-soldout:focus-visible{
-    background:var(--void); color:var(--soft); border-color:var(--dim);
-    box-shadow:4px 4px 0 rgba(107,44,54,.5); cursor:not-allowed;
-    letter-spacing:.24em; animation:bootFade .7s 1.2s both;   /* sin el pulse */
-  }
-  .btn--reg.is-soldout svg{ opacity:.8; }
-  .soldout-note{
-    font-family:var(--mono); font-size:clamp(.58rem,2.6vw,.72rem); letter-spacing:.2em;
-    text-transform:uppercase; color:var(--dim); animation:bootFade .8s 1.4s both;
   }
 
 
@@ -540,15 +527,10 @@
     </div>
     <p class="eyebrow">Desde el sótano</p>
     <div class="core__actions">
-      <!-- SOLD OUT temporal. Para reactivar el registro: en el botón volver a poner
-           data-node="reg" aria-haspopup/aria-expanded, sacar disabled + la clase
-           is-soldout, restaurar el ícono user-plus y el texto "Registrar en lista",
-           y borrar la línea .soldout-note de abajo. -->
-      <button class="btn btn--reg is-soldout" type="button" disabled aria-disabled="true" aria-label="Lista completa — sold out">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-        <span>Sold out</span>
+      <button class="btn btn--reg" type="button" data-node="reg" aria-haspopup="dialog" aria-expanded="false" aria-label="Registrar en lista">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 20v-1.6a3.8 3.8 0 0 0-3.8-3.8H6.3A3.8 3.8 0 0 0 2.5 18.4V20"/><circle cx="8.75" cy="8" r="3.4"/><path d="M18.5 8.2v5M21 10.7h-5"/></svg>
+        <span>Registrar en lista</span>
       </button>
-      <p class="soldout-note">· Lista completa momentáneamente ·</p>
     </div>
   </main>
 
